@@ -128,6 +128,11 @@ The task is to forecast the "Sales" column for the test set.
 
 ### Data reformatting
 
+The CompetitionOpenSinceMonth and CompetitionOpenSinceYear variables in the rossman.store dataset are combined and parsed into Y-m-d date format. The new variable is called CompetitionStart and indicates the date on which a competing store to a Rossmann store opened.
+Similarly, the Promo2SinceYear and Promo2SinceWeek variables are also combined and parsed into a valid date format to indicate the date when a store started participating in Promo2.
+
+The unused variables, CompetitionOpenSinceMonth, CompetitionOpenSinceYear, Promo2SinceYear, Promo2SinceWeek are then removed from the dataset.
+
 ```{r}
 rossman.train <-
   rossman.train %>%
@@ -159,9 +164,8 @@ Field | Missing Count
 ---|---
 CompetitionDistance | `r sum(is.na(rossman.store$CompetitionDistance))`
 CompetitionStart | `r sum(is.na(rossman.store$CompetitionStart))`
-Promo2SinceWeek | `r sum(is.na(rossman.store$Promo2SinceWeek))`
-Promo2SinceYear | `r sum(is.na(rossman.store$Promo2SinceYear))`
-StateHoliday | `r sum(is.na(rossman.train$StateHoliday))`
+PromoSinceDate | `r sum(is.na(rossman.store$PromoSinceDate))`
+PromoInterval | `r sum(is.na(rossman.store$PromoInterval))`
 
 __Implicit missing value__
 
@@ -175,12 +179,10 @@ These are implicit missing values in the sense that there are no NAs present in 
 
 Field | Assumption/Observation | Handling
 ---|---|---
-CompetitionDistance | There is no competition | Set to max(CompetitionDistance)
-CompetitionOpenSinceMonth | Competition was already present | Set to min(month(date))
-Promo2SinceWeek | NAs are seen only when Promo = No | Set to Zero
-Promo2SinceYear | NAs are seen only when Promo = No | Set to Zero
-StateHoliday | NAs are seen when StateHoliday is not zero | Set to "Yes"
-
+CompetitionDistance | There is no competition | Set to mean(CompetitionDistance)
+CompetitionStart | Competition was already present | Set to min(month(date))
+PromoSinceDate | NAs are seen only when Promo = No | Set to Zero
+PromoInterval | NAs are seen only when Promo = No | Set to Zero
 
 ```{r}
 # Merge store data into the sales data
@@ -294,7 +296,7 @@ Further, the variable PromoInterval describes the consecutive intervals Promo2 i
 Lets look at the distribution of Promo2 participating stores based on the PromotionInterval:
 
 ```{r}
-#table(rossman.store$Promo2, rossman.store$PromoInterval)
+table(rossman.store$Promo2, rossman.store$PromoInterval)
 ```
 
 
