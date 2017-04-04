@@ -329,6 +329,8 @@ merged.rossman.train %>%
   coord_flip()
 ```
 
+\pagebreak
+
 Further, lets explore the assortment levels under each store type:
 
 ```{r}
