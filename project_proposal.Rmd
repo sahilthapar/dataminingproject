@@ -331,6 +331,41 @@ Lets look at the distribution of Promo2 participating stores based on the Promot
 table(rossman.store$Promo2, rossman.store$PromoInterval)
 ```
 
+Variables Open, StateHoliday, and SchoolHoliday are categorical variables. The Variable open has values 1 and 0, which indicate whether the store was open (1) or closed (0).
+Frequency of open and closed status for stores are shown below:
+
+```{r}
+
+# Imputing values and converting to factors
+
+merged.rossman.train$StateHoliday[is.na(merged.rossman.train$StateHoliday)] <- 1
+
+merged.rossman.train <- merged.rossman.train %>% mutate(Open = as.factor(Open),
+                                          StateHoliday = as.factor(StateHoliday),
+                                          SchoolHoliday = as.factor(SchoolHoliday))
+
+table(merged.rossman.train$Open)
+```
+
+Further, we can also check the status for each store type.
+
+```{r}
+table(merged.rossman.train$StoreType, merged.rossman.train$Open, dnn = c("Store Type",
+      "Store Status"))
+```
+
+For Variable StateHoliday, a = Public Holiday, b = Easter Holiday, c = Christmas and 0 = no hoiday.
+
+```{r}
+table(merged.rossman.train$StateHoliday)
+```
+
+
+SchoolHoliday is similar to StateHoliday, 0 indicating that there was no schoolHoliday while 1 indicating that there was a SchoolHoliday
+
+```{r}
+table(merged.rossman.train$SchoolHoliday)
+```
 
 \pagebreak
 
