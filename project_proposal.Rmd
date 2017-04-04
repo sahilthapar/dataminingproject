@@ -141,7 +141,7 @@ merged.rossman.train %>%
 ```
 
 \pagebreak
-## EDA
+## EDA  
 Let's explore the variables that describe the 1115 Rossman stores.
 The store are categorized into 4 types: a, b, c and d. The number of stores of each type are as follows:
 ```{r}
@@ -157,7 +157,7 @@ Further, lets explore the assortment levels under each store type:
 ```{r}
 table(rossman.store$StoreType, rossman.store$Assortment, dnn = c("Store Type", "Assortment level"))
 ```
-The distance of each store from a nearest competing store has been provided in the dataset.
+The distance of each store from a nearest competing store has been provided in the dataset. Lets check the distribution of this variable.
 ```{r}
 ggplot(rossman.store) + geom_histogram(aes(x=CompetitionDistance), binwidth = 10000)
 ggplot(rossman.store) + geom_boxplot(aes(y=CompetitionDistance, x=""))
@@ -172,6 +172,7 @@ The above plot indicates that most of the outliers are noticed for store type 'a
 
 Promo2 is a continuing and consecutive promotion for some stores: 0 = store is not participating, 1 = store is participating.
 Lets look at how many store are offering the promotion
+
 ```{r}
 rossman.store %>% 
   select(Promo2) %>% 
