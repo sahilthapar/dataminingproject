@@ -89,10 +89,21 @@ To build a model to Forecast sales using store, promotion, and competitor data.
 
 ## Approach
 
-First step is to merge the training dataset and Store Sales data set. After that we will check each variable for missing values, clean the data and will do the required imputations. Our next step will be Exploratory Data Analysis where we identify variables that are important for building a forecasting model.
-
-The crucial part of the project is that the data in hand is a time series data. The problem with the data, as observed, is that there is a 6 month gap, where only a few stores report their revenues because the other stores were temporarily closed for refurbishment, which hampers the seasonality of the data. We will deal with this by imputing sales figures during the renovation period to have a complete time series of 942 days as with other stores that did not undergo renovation. Then using Random Forest for variable selection and Forecasting Package in R, we will build a model that best fits the data and has a high predictive accuracy.
-
+* Data preparation
+    - First step is to merge the training dataset and Store Sales data set.
+    - After that we will check each variable for missing values, clean the data and will do the required imputations.
+* Exploratory Data Analysis
+    - where we identify variables that are important for building a forecasting model.
+* Issues
+    - The problem with the data, as observed, is that there is a 6 month gap, where only a few stores report their revenues because the other stores were temporarily closed for refurbishment, which hampers the seasonality of the data.
+    - We will deal with this by imputing sales figures during the renovation period to have a complete time series of 942 days as with other stores that did not undergo renovation.
+* Modelling
+    - Time series data
+    - Regression Tree
+    - Random Forest
+    - Neural Networks
+    - Forecast package
+* Evaluating and Comparing the models
 
 \pagebreak
 
@@ -462,16 +473,18 @@ kable(as.data.frame(table(merged.rossman.train$SchoolHoliday)),
 The aim of modeling on the Rossmann Stores data is to predict the daily sales of stores for upto 6 weeks.
 The primary models we would use for this purpose are:  
 
-*__Regression Trees__  
+* __Regression Trees__  
+    - A tree based model involves segmenting the predictor space into simpler regions. The prediction of a new observation is nothing but the mean of the observations which belong to the same region.
+    - However, tree based models do not provide as accurate predictions as other supervised learning methods. 
 
-*__Random Forests__  
+* __Random Forests__  
+    - Hence, we would use the the Random forest technique, which involves producing multiple trees which are later combined to form a single prediction, to improve the prediction accuracy.
+    
+* __Neural Networks__
+    - Additionally, we would explore the application of Neural Networks to the data and compare the prediction accuracy with the Regression Tree and Random Forest Models.
 
-A tree based model involves segmenting the predictor space into simpler regions. The prediction of a new observation is nothing but the mean of the observations which belong to the same region.  
-However, tree based models do not provide as accurate predictions as other supervised learning methods. Hence, we would use the the Random forest technique, which involves producing multiple trees which are later combined to form a single prediction, to improve the prediction accuracy.
-
-Additionally, we would explore the application of __Neural Networks__ to the data and compare the prediction accuracy with the Regression Tree and Random Forest Models.
-
-If time allows, we would also like to use the 'forecast' package in R to predict the sales using a forecast model.
+* __Forecast__
+    - If time allows, we would also like to use the 'forecast' package in R to predict the sales using a forecast model.
 
 ## Evaluation Criteria
 
