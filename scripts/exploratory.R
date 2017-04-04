@@ -1,9 +1,5 @@
-<<<<<<< Updated upstream
-library(readr)
-library(ggplot2)
-library(lubridate)
-library(stringr)
-=======
+library(lubridate) # Handling dates
+library(stringr) # Handling strings
 library(readr) # Reading csv files
 library(tidyr) # Data manipulation
 library(dplyr) # Data manipulation
@@ -40,8 +36,8 @@ table(rossman.store$PromoInterval)
 #CompetitionOpensSinceMonth and CompetitionOpensSinceYear
 
 day <- 15
-rossman.store$CompetetionStart <- str_c(rossman.store$CompetitionOpenSinceYear,"-",rossman.store$CompetitionOpenSinceMonth,"-",day)
-rossman.store$CompetetionStart <- parse_date_time(rossman.store$Date, "Y-m-d", tz = "America/New_York")
+rossman.store$CompetitionStart <- str_c(rossman.store$CompetitionOpenSinceYear,"-",rossman.store$CompetitionOpenSinceMonth,"-",day)
+rossman.store$CompetitionStart <- parse_date_time(rossman.store$CompetitionStart, "Y-m-d", tz = "America/New_York")
 
 #Create a new variable PromoSinceDate in date format combining
 #Promo2SinceYear and Promo2SinceWeek
@@ -94,6 +90,7 @@ merged.rossman.train %>%
                                  fill = StoreType),
                    stat = "identity")
 
+
 #Analysis of Open, State Holiday, School holiday and Store type
 #changing categorical variables to factors
 #For StateHoliday the values are either 0 or NA's, imputing NAs with 1 (holidays)
@@ -109,3 +106,15 @@ table(merged.rossman.train$StateHoliday)
 table(merged.rossman.train$SchoolHoliday)
 
 # Complete
+
+# Drop in number of stores during a 6 month period
+
+merged.rossman.train %>% 
+  group_by(Date) %>% 
+  summarize(n = n()) %>% 
+  ggplot() +
+    geom_line(mapping = aes(x = Date,
+                            y = n)) +
+    labs(x = "Date",
+         y = "Number of stores")
+

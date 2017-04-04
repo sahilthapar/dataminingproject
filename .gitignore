@@ -4,3 +4,7 @@ dataminingproject.Rproj
 .RData
 .Rhistory
 .DS_Store
+*.html
+*.pdf
+project_proposal_cache/
+project_proposal_files/
