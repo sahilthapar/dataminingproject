@@ -460,11 +460,16 @@ kable(as.data.frame(table(merged.rossman.train$SchoolHoliday)),
 ## Models
 
 The aim of modeling on the Rossmann Stores data is to predict the daily sales of stores for upto 6 weeks.
-The primary models we would use for this purpose are __Regression Trees__ and __Random Forests__.  
+The primary models we would use for this purpose are:  
+
+*__Regression Trees__  
+
+*__Random Forests__  
+
 A tree based model involves segmenting the predictor space into simpler regions. The prediction of a new observation is nothing but the mean of the observations which belong to the same region.  
 However, tree based models do not provide as accurate predictions as other supervised learning methods. Hence, we would use the the Random forest technique, which involves producing multiple trees which are later combined to form a single prediction, to improve the prediction accuracy.
 
-Additionally, we would explore the application of __Neural Networks__ to the data and compare the prediction accuracy to the Regression Tree and Random Forest Models.
+Additionally, we would explore the application of __Neural Networks__ to the data and compare the prediction accuracy with the Regression Tree and Random Forest Models.
 
 If time allows, we would also like to use the 'forecast' package in R to predict the sales using a forecast model.
 
