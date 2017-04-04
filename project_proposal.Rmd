@@ -235,13 +235,8 @@ Further, lets explore the assortment levels under each store type:
 ```{r}
 table(rossman.store$StoreType, rossman.store$Assortment, dnn = c("Store Type", "Assortment level"))
 ```
-<<<<<<< HEAD
 The distance of each store from a nearest competing store has been provided in the dataset. Lets check the distribution of this variable.
-=======
 
-The distance of each store from a nearest competing store has been provided in the dataset.
-
->>>>>>> origin/master
 ```{r}
 ggplot(rossman.store) + geom_histogram(aes(x=CompetitionDistance), binwidth = 10000)
 ggplot(rossman.store) + geom_boxplot(aes(y=CompetitionDistance, x=""))
