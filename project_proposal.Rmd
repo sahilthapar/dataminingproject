@@ -1,0 +1,67 @@
+---
+title: "Project Proposal"
+author: "Sahil Thapar"
+date: "4/3/2017"
+output: html_document
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+knitr::opts_chunk$set(cache = TRUE)
+```
+
+## Executive Summary
+
+\pagebreak
+
+## Background
+
+Rossmann is a Germany's second largest drug store chain and operates over 3,000 drug stores in 7 European countries.
+Rossmann store managers are responsible for predicting the daily sales for stores for up to six weeks in advance.
+The following factors can affect the store sales:
+
+* promotions,
+* competition,
+* school and state holidays,
+* seasonality, and
+* locality.
+
+With individual managers using their expertise and judgement to predict these sales the accruacy can have huge variance.
+
+Rossman challenged data scientists on [Kaggle](https://www.kaggle.com/c/rossmann-store-sales) to predict 6 weeks of daily sales for 1,115 stores located across Germany.
+
+The main motivation behind developing a model to predict the sales is to off-load and automate some of the work from store managers so as to increase the productivity, manage staff schedules. A robust prediction model enables the store managers to focus on the customers and staff members.
+
+\pagebreak
+
+## Problem and Objective
+
+\pagebreak
+
+## Approach
+
+\pagebreak
+
+## Data Dictionary
+
+\pagebreak
+
+## Missing value and outliers
+
+\pagebreak
+
+## EDA
+
+\pagebreak
+
+## Models
+
+\pagebreak
+
+## Evaluation Criteria
+
+\pagebreak
+
+## Timeline
+
+\pagebreak
