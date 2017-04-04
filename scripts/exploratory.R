@@ -90,6 +90,23 @@ merged.rossman.train %>%
                                  fill = StoreType),
                    stat = "identity")
 
+
+#Analysis of Open, State Holiday, School holiday and Store type
+#changing categorical variables to factors
+#For StateHoliday the values are either 0 or NA's, imputing NAs with 1 (holidays)
+
+merged.rossman.train$StateHoliday[is.na(merged.rossman.train$StateHoliday)] <- 1
+
+merged.rossman.train <- merged.rossman.train %>% mutate(Open = as.factor(Open),
+                                          StateHoliday = as.factor(StateHoliday),
+                                          SchoolHoliday = as.factor(SchoolHoliday))
+
+table(merged.rossman.train$Open)
+table(merged.rossman.train$StateHoliday)
+table(merged.rossman.train$SchoolHoliday)
+
+# Complete
+
 # Drop in number of stores during a 6 month period
 
 merged.rossman.train %>% 
@@ -100,3 +117,4 @@ merged.rossman.train %>%
                             y = n)) +
     labs(x = "Date",
          y = "Number of stores")
+
