@@ -24,9 +24,12 @@ library(forcats) # Factors
 
 # Read files
 
-rossman.train <- read_csv(file = './data/train.csv')
-rossman.test <- read_csv(file = './data/test.csv')
-rossman.store <- read_csv(file = './data/store.csv')
+rossman.train <- read_csv(file = './data/train.csv',
+                          col_types = 'icDiicccc')
+rossman.test <- read_csv(file = './data/test.csv',
+                         col_types = 'iicDcccc')
+rossman.store <- read_csv(file = './data/store.csv',
+                          col_types = 'icciiiiic')
 ```
 
 ## Executive Summary
@@ -97,6 +100,28 @@ The task is to forecast the "Sales" column for the test set.
 
 ## Data Preparation and Cleaning
 
+
+### Data reformatting
+
+```{r}
+rossman.train <-
+  rossman.train %>%
+  mutate(DayOfWeek = fct_recode(DayOfWeek,
+                                "Monday" = "1" ,
+                                "Tuesday" = "2" ,
+                                "Wednesday" = "3" ,
+                                "Thursday" = "4" ,
+                                "Friday" = "5" ,
+                                "Saturday" = "6" ,
+                                "Sunday" = "7" ),
+         Open = fct_recode(Open,
+                           "Closed" = "0",
+                           "Open" = "1"),
+         Promo = fct_recode(Promo,
+                            "Yes" = "1",
+                            "No" = "0"))
+```
+
 ### Missing value and outliers
 
 > "An explicit missing value is the presence of an absence; an implicit missing value is the absence of a presence" - Hadley Wickam
@@ -140,6 +165,7 @@ merged.rossman.train %>%
          y = "Number of stores",
          title = "Number of stores open across time")
 ```
+
 
 \pagebreak
 
@@ -234,8 +260,7 @@ Further, the variable PromoInterval describes the consecutive intervals Promo2 i
 Lets look at the distribution of Promo2 participating stores based on the PromotionInterval:
 
 ```{r}
-table(rossman.store$Promo2, rossman.store$PromoInterval)
-
+#table(rossman.store$Promo2, rossman.store$PromoInterval)
 ```
 
 
