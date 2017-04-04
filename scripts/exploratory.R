@@ -40,8 +40,8 @@ table(rossman.store$PromoInterval)
 #CompetitionOpensSinceMonth and CompetitionOpensSinceYear
 
 day <- 15
-rossman.store$CompetetionStart <- str_c(rossman.store$CompetitionOpenSinceYear,"-",rossman.store$CompetitionOpenSinceMonth,"-",day)
-rossman.store$CompetetionStart <- parse_date_time(rossman.store$Date, "Y-m-d", tz = "America/New_York")
+rossman.store$CompetitionStart <- str_c(rossman.store$CompetitionOpenSinceYear,"-",rossman.store$CompetitionOpenSinceMonth,"-",day)
+rossman.store$CompetitionStart <- parse_date_time(rossman.store$CompetitionStart, "Y-m-d", tz = "America/New_York")
 
 #Create a new variable PromoSinceDate in date format combining
 #Promo2SinceYear and Promo2SinceWeek
