@@ -85,9 +85,7 @@ The following factors can affect the store sales:
 
 ## Objective
 
-To build a model to Forecast sales using store, promotion, and competitor data
-
-\pagebreak
+To build a model to Forecast sales using store, promotion, and competitor data.
 
 ## Approach
 
@@ -216,7 +214,7 @@ We can use some simple rules to __create__ missing values,
 * Sales - take mean(Sales)
 * Customers - take mean(Customers)
 
-```{r}
+```{r, fig.height = 3, fig.width = 4}
 # Merge store data into the sales data
 
 merged.rossman.train <-
@@ -240,7 +238,7 @@ merged.rossman.train %>%
 
 Let us look at the store sales for one of the stores that is missing data during this period.
 
-```{r}
+```{r, fig.width = 4, fig.height=3}
 merged.rossman.train %>%
   filter(Store == 20) %>%
   ggplot(mapping = aes(x = Date,
@@ -268,11 +266,11 @@ We can use some simple rules to __create__ data for missing values,
 Let's explore the variables that describe the 1115 Rossman stores.
 The store are categorized into 4 types: a, b, c and d. The number of stores of each type are as follows:
 
-```{r, fig.width=10, include = T}
+```{r, include = T}
 kable(as.data.frame(table(rossman.store$StoreType)), col.names = c("Store Type", "Frequency"))
 ```
 
-```{r, fig.width=10, include = T}
+```{r, fig.width=10, fig.height = 3, include = T}
 merged.rossman.train %>%
   group_by(StoreType) %>%
   summarize(avgSalePerCustomer = round(mean(Sales/Customers, na.rm = T), 2),
@@ -297,7 +295,7 @@ Each store has an assortment level which describes the amount of products offere
 a = basic, b = extra, c = extended  
 Lets look at the number of stores corresponsing to each assortment level:
 
-```{r, fig.width = 10}
+```{r, fig.width = 10, fig.height = 3}
 kable(as.data.frame(table(rossman.store$Assortment)),
       col.names = c("Assortment", "Frequency"))
 merged.rossman.train %>%
@@ -328,7 +326,7 @@ table(rossman.store$StoreType, rossman.store$Assortment, dnn = c("Store Type", "
 
 The distance of each store from a nearest competing store has been provided in the dataset. Lets check the distribution of this variable.
 
-```{r}
+```{r, fig.width = 4, fig.height=3}
 
   ggplot(rossman.store) + 
   geom_histogram(aes(x=CompetitionDistance),
@@ -337,7 +335,9 @@ The distance of each store from a nearest competing store has been provided in t
   labs(x = "Competition Distance",
        y = "Count",
        title = "Distribution of Competition Distance")
+```
 
+```{r, fig.width = 4, fig.height=3}
   ggplot(rossman.store) +
     geom_boxplot(aes(y=CompetitionDistance,
                      x=""),
@@ -351,7 +351,7 @@ The plots indicates that the variable CompetitionDistance is right skewed and co
 
 Let us try the log transformation for this variable
 
-```{r}
+```{r, fig.width = 4, fig.height=3}
   ggplot(rossman.store) + 
   geom_histogram(aes(x=log(CompetitionDistance)),
                  binwidth = 1,
@@ -359,7 +359,9 @@ Let us try the log transformation for this variable
   labs(x = "log(Competition Distance)",
        y = "Count",
        title = "Distribution of Log of Competition Distance")
+```
 
+```{r, fig.width = 4, fig.height=3}
   ggplot(rossman.store) +
     geom_boxplot(aes(y=log(CompetitionDistance),
                      x=""),
@@ -371,7 +373,7 @@ Let us try the log transformation for this variable
 
 We can further breakdown the variable and explore it separately for each StoreType.
 
-```{r}
+```{r, fig.width = 4, fig.height=3}
   ggplot(rossman.store) +
   geom_boxplot(aes(y = log(CompetitionDistance),
                    x = StoreType,
@@ -387,7 +389,7 @@ Very few outliers are seen after the log transformation.
 Promo2 is a continuing and consecutive promotion for some stores: 0 = store is not participating, 1 = store is participating.
 Lets look at how many store are offering the promotion
 
-```{r}
+```{r, fig.width = 4, fig.height=3}
 rossman.store %>% 
   select(Promo2) %>% 
   group_by(Promo2) %>% 
@@ -396,7 +398,8 @@ rossman.store %>%
   geom_bar(aes(x=Promo2,
                y=total,
                fill = Promo2),
-           stat = "identity") +
+           stat = "identity",
+           width = 0.5) +
     labs(y = "Number of stores",
          x = "Promotion",
          title = "Promotion running stores")
@@ -465,8 +468,6 @@ Additionally, we would explore the application of __Neural Networks__ to the dat
 
 If time allows, we would also like to use the 'forecast' package in R to predict the sales using a forecast model.
 
-\pagebreak
-
 ## Evaluation Criteria
 
 The Kaggle competition used Root Mean Square Percentage Error (RMSPE) as the evaluation metric and we will be using the same metric for evaluating the predictive performance of our model.
@@ -492,8 +493,6 @@ EDA | Apr 09, 2017
 Modelling and evaluation | Apr 14, 2017 
 Comparing models | Apr 17, 2017 
 Collation of results into report and presentation | Apr 19, 2017 
-
-\pagebreak
 
 ##Sources
 
