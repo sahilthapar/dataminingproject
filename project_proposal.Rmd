@@ -137,41 +137,90 @@ merged.rossman.train %>%
     geom_line(mapping = aes(x = Date,
                             y = n)) +
     labs(x = "Date",
-         y = "Number of stores")
+         y = "Number of stores",
+         title = "Number of stores open across time")
 ```
 
 \pagebreak
+
 ## EDA
 Let's explore the variables that describe the 1115 Rossman stores.
 The store are categorized into 4 types: a, b, c and d. The number of stores of each type are as follows:
-```{r}
+
+```{r fig.width=10}
 table(rossman.store$StoreType)
+merged.rossman.train %>%
+  group_by(StoreType) %>%
+  summarize(avgSalePerCustomer = round(mean(Sales/Customers, na.rm = T), 2),
+            avgSales = round(mean(Sales), 2),
+            avgCustomers = round(mean(Customers), 2)) %>%
+  gather(key = "Metric", value = "value", avgSales, avgSalePerCustomer, avgCustomers) %>%
+  ggplot() +
+  geom_bar(mapping = aes(x = StoreType,
+                         y = value,
+                         fill = StoreType),
+           stat = "identity",
+           position = "dodge",
+           width = 0.5) +
+  labs(x = "Store Type",
+       y = "Value",
+       title = "Exploring sales by Store Type") +
+  facet_wrap(~ Metric, nrow = 1, scales = "free") +
+  coord_flip()
 ```
+
 Each store has an assortment level which describes the amount of products offered by that store. The assortment levels are as described as follows:
-a = basic, b = extra, c = extended
+a = basic, b = extra, c = extended  
 Lets look at the number of stores corresponsing to each assortment level:
-```{r}
+
+```{r, fig.width = 10}
 table(rossman.store$Assortment)
+merged.rossman.train %>%
+  group_by(Assortment) %>%
+  summarize(avgSalePerCustomer = round(mean(Sales/Customers, na.rm = T), 2),
+            avgSales = round(mean(Sales), 2),
+            avgCustomers = round(mean(Customers), 2)) %>%
+  gather(key = "Metric", value = "value", avgSales, avgSalePerCustomer, avgCustomers) %>%
+  ggplot() +
+  geom_bar(mapping = aes(x = Assortment,
+                         y = value,
+                         fill = Assortment),
+           stat = "identity",
+           position = "dodge",
+           width = 0.4) +
+  labs(x = "Assortment",
+       y = "Value",
+       title = "Exploring sales by Assortment") +
+  facet_wrap(~ Metric, nrow = 1, scales = "free") +
+  coord_flip()
 ```
+
 Further, lets explore the assortment levels under each store type:
+
 ```{r}
 table(rossman.store$StoreType, rossman.store$Assortment, dnn = c("Store Type", "Assortment level"))
 ```
+
 The distance of each store from a nearest competing store has been provided in the dataset.
+
 ```{r}
 ggplot(rossman.store) + geom_histogram(aes(x=CompetitionDistance), binwidth = 10000)
 ggplot(rossman.store) + geom_boxplot(aes(y=CompetitionDistance, x=""))
 ```
+
 The plots indicates that the variable CompetitionDistance is right skewed and contains a large number of outliers.
 We can further breakdown the variable and explore it separately for each StoreType.
+
 ```{r}
 ggplot(rossman.store) + geom_boxplot(aes(y=CompetitionDistance, x=StoreType))
 
 ```
+
 The above plot indicates that most of the outliers are noticed for store type 'a'
 
 Promo2 is a continuing and consecutive promotion for some stores: 0 = store is not participating, 1 = store is participating.
 Lets look at how many store are offering the promotion
+
 ```{r}
 rossman.store %>% 
   select(Promo2) %>% 
@@ -179,9 +228,11 @@ rossman.store %>%
   summarize(total = n()) %>% 
 ggplot() + geom_bar(aes(x=Promo2, y=total), stat = "identity")
 ```
+
 Further, the variable PromoInterval describes the consecutive intervals Promo2 is started, naming the months the promotion is started anew. E.g. "Feb,May,Aug,Nov" means each round starts in February, May, August, November of any given year for that store
 
 Lets look at the distribution of Promo2 participating stores based on the PromotionInterval:
+
 ```{r}
 table(rossman.store$Promo2, rossman.store$PromoInterval)
 
