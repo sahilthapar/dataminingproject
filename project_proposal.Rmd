@@ -6,8 +6,27 @@ output: html_document
 ---
 
 ```{r setup, include=FALSE}
-knitr::opts_chunk$set(echo = TRUE)
+knitr::opts_chunk$set(echo = FALSE, warning = F, message = F)
 knitr::opts_chunk$set(cache = TRUE)
+```
+
+``` {r}
+library(lubridate) # Handling dates
+library(stringr) # Handling strings
+library(readr) # Reading csv files
+library(tidyr) # Data manipulation
+library(dplyr) # Data manipulation
+library(ggplot2) # Plots
+library(forcats) # Factors
+
+## Note setup:
+# Add your data folder into this directory and
+
+# Read files
+
+rossman.train <- read_csv(file = './data/train.csv')
+rossman.test <- read_csv(file = './data/test.csv')
+rossman.store <- read_csv(file = './data/store.csv')
 ```
 
 ## Executive Summary
@@ -78,9 +97,48 @@ The task is to forecast the "Sales" column for the test set.
 
 ## Data Preparation and Cleaning
 
-\pagebreak
+### Missing value and outliers
 
-## Missing value and outliers
+> "An explicit missing value is the presence of an absence; an implicit missing value is the absence of a presence" - Hadley Wickam
+
+Two types of missing values:
+
+__Explicit missing value__
+
+Field | Missing Count
+---|---
+CompetitionDistance | `r sum(is.na(rossman.store$CompetitionDistance))`
+CompetitionOpenSinceMonth | `r sum(is.na(rossman.store$CompetitionOpenSinceMonth))`
+Promo2SinceWeek | `r sum(is.na(rossman.store$Promo2SinceWeek))`
+Promo2SinceYear | `r sum(is.na(rossman.store$Promo2SinceYear))`
+StateHoliday | `r sum(is.na(rossman.train$StateHoliday))`
+
+__Implicit missing value__
+
+The number of stores that have recorded sales data falls significantly during a 6 month period. This information was provided in the data description as:
+
+> Note that some stores in the dataset were temporarily closed for refurbishment.
+
+These are implicit missing values in the sense that there are no NAs present in the data set. Instead the expected rows are missing all together.
+
+```{r}
+# Merge store data into the sales data
+
+merged.rossman.train <-
+  rossman.train %>%
+  left_join(rossman.store, by = 'Store')
+
+# Drop in number of stores during a 6 month period
+
+merged.rossman.train %>% 
+  group_by(Date) %>% 
+  summarize(n = n()) %>% 
+  ggplot() +
+    geom_line(mapping = aes(x = Date,
+                            y = n)) +
+    labs(x = "Date",
+         y = "Number of stores")
+```
 
 \pagebreak
 
