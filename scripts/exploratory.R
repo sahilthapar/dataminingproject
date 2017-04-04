@@ -117,4 +117,3 @@ merged.rossman.train %>%
                             y = n)) +
     labs(x = "Date",
          y = "Number of stores")
-

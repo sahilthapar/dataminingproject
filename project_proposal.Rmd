@@ -145,9 +145,17 @@ rossman.train <-
                                 "Saturday" = "6" ,
                                 "Sunday" = "7" ),
          Open = fct_recode(Open,
-                           "Closed" = "0",
-                           "Open" = "1"),
+                           "Yes" = "1",
+                           "No" = "0"),
          Promo = fct_recode(Promo,
+                            "Yes" = "1",
+                            "No" = "0"),
+         StateHoliday = fct_recode(StateHoliday,
+                                   "None" = "0",
+                                   "Public" = "a",
+                                   "Easter" = "b",
+                                   "Christmas" = "c"),
+         SchoolHoliday = fct_recode(SchoolHoliday,
                             "Yes" = "1",
                             "No" = "0"))
 ```
@@ -179,10 +187,34 @@ These are implicit missing values in the sense that there are no NAs present in 
 
 Field | Assumption/Observation | Handling
 ---|---|---
+<<<<<<< Updated upstream
 CompetitionDistance | There is no competition | Set to mean(CompetitionDistance)
 CompetitionStart | Competition was already present | Set to min(month(date))
 PromoSinceDate | NAs are seen only when Promo = No | Set to Zero
 PromoInterval | NAs are seen only when Promo = No | Set to Zero
+=======
+CompetitionDistance | There is no competition | Set to max(CompetitionDistance)
+CompetitionOpenSinceMonth | Competition was already present | Set to min(month(date))
+Promo2SinceWeek | NAs are seen only when Promo = No | Set to Zero
+Promo2SinceYear | NAs are seen only when Promo = No | Set to Zero
+StateHoliday | NAs are seen when StateHoliday is not zero | Set to "Yes"
+
+__Implicit Missing Values__
+
+How to Fix this ?
+
+We can use some simple rules to __create__ missing values,
+
+* Create a row for every (Store, Date) for the missing six months
+* DayOfWeek - can be created using Date
+* Open - take a majority vote to decide if store is open on the date
+* Promo - take a majority vote to decide if store is running a promo on the date
+* StateHoliday - take a majority vote to decide if there is a state holiday on the date
+* SchoolHoliday - take a majority vote to decide if there is a school holiday on the date
+* Sales - take mean(Sales)
+* Customers - take mean(Customers)
+
+>>>>>>> Stashed changes
 
 ```{r}
 # Merge store data into the sales data
