@@ -1,0 +1,548 @@
+---
+title: "Predicting Store Sales - Project Proposal"
+author: "Joshi Apoorv, Thapar Sahil, Upreti Jainendra"
+date: "4/3/2017"
+output:
+  beamer_presentation
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = FALSE, warning = F, message = F)
+knitr::opts_chunk$set(cache = TRUE)
+```
+
+``` {r}
+library(lubridate) # Handling dates
+library(stringr) # Handling strings
+library(readr) # Reading csv files
+library(tidyr) # Data manipulation
+library(dplyr) # Data manipulation
+library(ggplot2) # Plots
+library(forcats) # Factors
+library(knitr) # Clean tables
+
+## Note setup:
+# Add your data folder into this directory and
+
+# Read files
+
+rossman.train <- read_csv(file = './data/train.csv',
+                          col_types = 'icDiicccc')
+rossman.test <- read_csv(file = './data/test.csv',
+                         col_types = 'iicDcccc')
+rossman.store <- read_csv(file = './data/store.csv',
+                          col_types = 'icciiiciic')
+
+#Change format of variables where required
+# rossman.store <- rossman.store %>% mutate(StoreType = as.factor(StoreType),
+#                          Assortment = as.factor(Assortment),
+#                          Promo2 = as.factor(Promo2),
+#                          PromoInterval = as.factor(PromoInterval))
+
+rossman.store <-
+  rossman.store %>%
+  mutate(Assortment = fct_recode(Assortment,
+                                "Basic" = "a",
+                                "Extra" = "b",
+                                "Extended" = "c"))
+
+#Create a new variable CompetitionStart in date format combining
+#CompetitionOpensSinceMonth and CompetitionOpensSinceYear
+day <- 15
+rossman.store$CompetitionStart <- str_c(rossman.store$CompetitionOpenSinceYear,"-",rossman.store$CompetitionOpenSinceMonth,"-",day)
+rossman.store$CompetitionStart <- parse_date_time(rossman.store$CompetitionStart, "Y-m-d", tz = "America/New_York")
+
+#Create a new variable PromoSinceDate in date format combining
+#Promo2SinceYear and Promo2SinceWeek
+rossman.store$PromoSinceDate <- as.Date(paste(rossman.store$Promo2SinceYear,rossman.store$Promo2SinceWeek, 1, sep="-"), "%Y-%U-%u")
+
+#Remove unusable variables holding values of month and year
+rossman.store[,c(5,6,8,9)] <- NULL
+
+```
+
+## The Problem And Background
+
+Rossmann is a Germany's second largest drug store chain and operates over 3,000 drug stores in 7 European countries.
+
+Rossman challenged data scientists on [Kaggle](https://www.kaggle.com/c/rossmann-store-sales) to predict 6 weeks of daily sales for 1,115 stores located across Germany.
+
+The following factors can affect the store sales:
+
+* promotions,
+* competition,
+* school and state holidays,
+* seasonality, and
+* locality.
+
+## Objective
+
+To build a model to Forecast sales using store, promotion, and competitor data.
+
+## Approach
+
+* Data preparation
+    - Merge data set.
+    - Missing values - Explicit, Implicit
+    - Imputation.
+* Exploratory Data Analysis
+* Issues
+    - 6 month gap for some stores
+    
+***
+
+* Modelling
+    - Time series data
+    - Regression Tree
+    - Random Forest
+    - Neural Networks
+    - Forecast package
+* Evaluating and Comparing the models
+
+## About the Data
+
+[Source: Kaggle](https://www.kaggle.com/c/rossmann-store-sales/data)
+
+Historical sales data for 1,115 Rossmann stores is provided.
+The task is to forecast the "Sales" column for the test set.
+
+### Files
+
+* __train.csv__ - historical data including Sales
+* __test.csv__  - historical data excluding Sales
+* __store.csv__ - supplemental information about the stores
+
+***
+
+### Data dictionary
+
+__Train__
+
+* __Id__ - an Id that represents a (Store, Date) duple within the test set
+* __Store__ - a unique Id for each store
+* __Sales__ - the turnover for any given day (this is what you are predicting)
+* __Customers__ - the number of customers on a given day
+* __Open__ - an indicator for whether the store was open: 0 = closed, 1 = open
+
+***
+
+* __StateHoliday__ - indicates a state holiday. Normally all stores, with few exceptions, are closed on state holidays. Note that all schools are closed on public holidays and weekends. a = public holiday, b = Easter holiday, c = Christmas, 0 = None
+* __SchoolHoliday__ - indicates if the (Store, Date) was affected by the closure of public schools
+
+***
+
+__Store Data__
+
+* __StoreType__ - differentiates between 4 different store models: a, b, c, d
+* __Assortment__ - describes an assortment level: a = basic, b = extra, c = extended
+* __CompetitionDistance__ - distance in meters to the nearest competitor store
+* __CompetitionOpenSince [Month/Year]__ - gives the approximate year and month of the time the nearest competitor was opened
+
+***
+
+* __Promo__ - indicates whether a store is running a promo on that day
+* __Promo2__ - Promo2 is a continuing and consecutive promotion for some stores: 0 = store is not participating, 1 = store is participating
+* __Promo2Since [Year/Week]__ - describes the year and calendar week when the store started participating in Promo2
+* __PromoInterval__ - describes the consecutive intervals Promo2 is started, naming the months the promotion is started anew. E.g. "Feb,May,Aug,Nov" means each round starts in February, May, August, November of any given year for that store
+
+***
+
+### Data reformatting
+
+* Conversion of formats
+* Recoding levels for factor variables
+
+```{r}
+rossman.train <-
+  rossman.train %>%
+  mutate(DayOfWeek = fct_recode(DayOfWeek,
+                                "Monday" = "1" ,
+                                "Tuesday" = "2" ,
+                                "Wednesday" = "3" ,
+                                "Thursday" = "4" ,
+                                "Friday" = "5" ,
+                                "Saturday" = "6" ,
+                                "Sunday" = "7" ),
+         Open = fct_recode(Open,
+                           "Yes" = "1",
+                           "No" = "0"),
+         Promo = fct_recode(Promo,
+                            "Yes" = "1",
+                            "No" = "0"),
+         StateHoliday = fct_recode(StateHoliday,
+                                   "None" = "0",
+                                   "Public" = "a",
+                                   "Easter" = "b",
+                                   "Christmas" = "c"),
+         SchoolHoliday = fct_recode(SchoolHoliday,
+                            "Yes" = "1",
+                            "No" = "0"))
+```
+
+***
+
+### Combining Variables
+  
+* Merged CompetitionOpenSinceMonth and CompetitionOpenSinceYear variables.
+* Similarly, merged the Promo2SinceYear and Promo2SinceWeek variables
+
+### Missing value and outliers
+
+> "An explicit missing value is the presence of an absence; an implicit missing value is the absence of a presence" - Hadley Wickam
+
+***
+
+Two types of missing values:
+
+__Explicit missing value__
+
+Field | Missing Count
+---|---
+CompetitionDistance | `r sum(is.na(rossman.store$CompetitionDistance))`
+CompetitionStart | `r sum(is.na(rossman.store$CompetitionStart))`
+PromoSinceDate | `r sum(is.na(rossman.store$PromoSinceDate))`
+PromoInterval | `r sum(is.na(rossman.store$PromoInterval))`
+
+***
+
+__Implicit missing value__
+
+The number of stores that have recorded sales data falls significantly during a 6 month period. This information was provided in the data description as:
+
+> Note that some stores in the dataset were temporarily closed for refurbishment.
+
+These are implicit missing values in the sense that there are no NAs present in the data set. Instead the expected rows are missing all together.
+
+## Data Imputation
+
+Field | Assumption/Observation | Handling
+---|---|---
+CompetitionDistance | No competition | Set to mean
+CompetitionStart | Already present | Set to min date
+PromoSinceDate | NAs only when Promo = No | Set to Zero
+PromoInterval | NAs only when Promo = No | Set to Zero
+
+***
+
+__Implicit Missing Values__
+
+How to Fix this ?
+
+We can use some simple rules to __create__ missing values,
+
+* Create a row for every (Store, Date) for the missing six months
+* DayOfWeek - can be created using Date
+* Open - take a majority vote to decide if store is open on the date
+* Promo - take a majority vote to decide if store is running a promo on the date
+
+***
+
+* StateHoliday - take a majority vote to decide if there is a state holiday on the date
+* SchoolHoliday - take a majority vote to decide if there is a school holiday on the date
+* Sales - take mean(Sales)
+* Customers - take mean(Customers)
+
+***
+
+```{r, fig.height = 3, fig.width = 4}
+# Merge store data into the sales data
+
+merged.rossman.train <-
+  rossman.train %>%
+  left_join(rossman.store, by = 'Store')
+
+# Drop in number of stores during a 6 month period
+
+merged.rossman.train %>% 
+  group_by(Date) %>% 
+  summarize(n = n()) %>% 
+  ggplot() +
+    geom_line(mapping = aes(x = Date,
+                            y = n),
+              color = "#3498db") +
+    labs(x = "Date",
+         y = "Number of stores",
+         title = "Number of stores open across time")
+
+```
+
+***
+
+Let us look at the store sales for one of the stores that is missing data during this period.
+
+```{r, fig.width = 4, fig.height=3}
+merged.rossman.train %>%
+  filter(Store == 20) %>%
+  ggplot(mapping = aes(x = Date,
+                       y = Sales)) +
+  geom_line(color = "#2ecc71") +
+  geom_smooth() + 
+  labs(title = "Store 20 Revenue across time")
+```
+
+***
+
+We can use some simple rules to __create__ data for missing values,
+
+* Create a row for every (Store, Date) for the missing six months
+* DayOfWeek - can be created using Date
+* Open - take a majority vote to decide if store is open on the date
+* Promo - take a majority vote to decide if store is running a promo on the date
+* StateHoliday - take a majority vote to decide if there is a state holiday on the date
+* SchoolHoliday - take a majority vote to decide if there is a school holiday on the date
+* Sales - take mean(Sales)
+* Customers - take mean(Customers)
+
+## Exploratory Data Analysis
+
+Let's explore the variables that describe the 1115 Rossman stores.
+The store are categorized into 4 types: a, b, c and d. The number of stores of each type are as follows:
+
+```{r, include = T}
+kable(as.data.frame(table(rossman.store$StoreType)), col.names = c("Store Type", "Frequency"))
+```
+
+***
+
+```{r, fig.width=7, fig.height = 3, include = T}
+merged.rossman.train %>%
+  group_by(StoreType) %>%
+  summarize(avgSalePerCustomer = round(mean(Sales/Customers, na.rm = T), 2),
+            avgSales = round(mean(Sales), 2),
+            avgCustomers = round(mean(Customers), 2)) %>%
+  gather(key = "Metric", value = "value", avgSales, avgSalePerCustomer, avgCustomers) %>%
+  ggplot() +
+  geom_bar(mapping = aes(x = StoreType,
+                         y = value,
+                         fill = StoreType),
+           stat = "identity",
+           position = "dodge",
+           width = 0.5) +
+  labs(x = "Store Type",
+       y = "Value",
+       title = "Exploring sales by Store Type") +
+  facet_wrap(~ Metric, nrow = 1, scales = "free") +
+  coord_flip()
+```
+
+Each store has an assortment level which describes the amount of products offered by that store. The assortment levels are as described as follows:
+a = basic, b = extra, c = extended  
+
+***
+
+Lets look at the number of stores corresponsing to each assortment level:
+
+```{r, fig.width = 10, fig.height = 3}
+kable(as.data.frame(table(rossman.store$Assortment)),
+      col.names = c("Assortment", "Frequency"))
+```
+
+***
+
+```{r, fig.width = 7, fig.height = 3}
+merged.rossman.train %>%
+  group_by(Assortment) %>%
+  summarize(avgSalePerCustomer = round(mean(Sales/Customers, na.rm = T), 2),
+            avgSales = round(mean(Sales), 2),
+            avgCustomers = round(mean(Customers), 2)) %>%
+  gather(key = "Metric", value = "value", avgSales, avgSalePerCustomer, avgCustomers) %>%
+  ggplot() +
+  geom_bar(mapping = aes(x = Assortment,
+                         y = value,
+                         fill = Assortment),
+           stat = "identity",
+           position = "dodge",
+           width = 0.4) +
+  labs(x = "Assortment",
+       y = "Value",
+       title = "Exploring sales by Assortment") +
+  facet_wrap(~ Metric, nrow = 1, scales = "free") +
+  coord_flip()
+```
+
+***
+
+The distance of each store from a nearest competing store has been provided in the dataset. Lets check the distribution after log transformation of this variable.
+
+```{r, fig.width = 6, fig.height=3}
+  ggplot(rossman.store) + 
+  geom_histogram(aes(x=log(CompetitionDistance)),
+                 binwidth = 1,
+                 fill = "#2980b9")  +
+  labs(x = "log(Competition Distance)",
+       y = "Count",
+       title = "Distribution of Log of Competition Distance")
+```
+
+***
+
+```{r, fig.width = 6, fig.height=3}
+  ggplot(rossman.store) +
+    geom_boxplot(aes(y=log(CompetitionDistance),
+                     x=""),
+                 fill = "#2980b9")  +
+    labs(y = "log(Competition Distance)",
+       x = "",
+       title = "Distribution of Log of Competition Distance (Boxplot)")
+```
+
+***
+
+We can further breakdown the variable and explore it separately for each StoreType.
+
+```{r, fig.width = 6, fig.height=3}
+  ggplot(rossman.store) +
+  geom_boxplot(aes(y = log(CompetitionDistance),
+                   x = StoreType,
+                   fill = StoreType))   +
+    labs(y = "log(Competition Distance)",
+       x = "Store Type",
+       title = "Distribution of Log of Competition Distance (Boxplot)")
+
+```
+
+***
+
+Promo2 is a continuing and consecutive promotion for some stores: 0 = store is not participating, 1 = store is participating.
+Lets look at how many store are offering the promotion
+
+```{r, fig.width = 4, fig.height=3}
+rossman.store %>% 
+  select(Promo2) %>% 
+  group_by(Promo2) %>% 
+  summarize(total = n()) %>% 
+  ggplot() + 
+  geom_bar(aes(x=Promo2,
+               y=total,
+               fill = Promo2),
+           stat = "identity",
+           width = 0.5) +
+    labs(y = "Number of stores",
+         x = "Promotion",
+         title = "Promotion running stores")
+```
+
+***
+
+Further, the variable PromoInterval describes the consecutive intervals Promo2 is started, naming the months the promotion is started anew. E.g. "Feb,May,Aug,Nov" means each round starts in February, May, August, November of any given year for that store
+
+***
+
+Lets look at the distribution of Promo2 participating stores based on the PromotionInterval:
+
+```{r}
+kable(as.data.frame(table(rossman.store$Promo2, rossman.store$PromoInterval)) %>%
+  filter(Var1 == 1) %>%
+  select(c(Var2, Freq)),
+  col.names = c("Promotion Interval", "Frequency"))
+```
+
+Variables Open, StateHoliday, and SchoolHoliday are categorical variables. The Variable open has values 1 and 0, which indicate whether the store was open (1) or closed (0).
+
+***
+
+Frequency of open and closed status for stores are shown below:
+
+```{r}
+
+# Imputing values and converting to factors
+
+merged.rossman.train$StateHoliday[is.na(merged.rossman.train$StateHoliday)] <- 1
+
+merged.rossman.train <- merged.rossman.train %>% mutate(Open = as.factor(Open),
+                                          StateHoliday = as.factor(StateHoliday),
+                                          SchoolHoliday = as.factor(SchoolHoliday))
+
+kable(as.data.frame(table(merged.rossman.train$Open)),
+      col.names = c("Store Open", "Frequency"))
+```
+
+***
+
+Further, we can also check the status for each store type.
+
+```{r}
+table(merged.rossman.train$StoreType, merged.rossman.train$Open, dnn = c("Store Type",
+      "Store Status"))
+```
+
+***
+
+For Variable StateHoliday, a = Public Holiday, b = Easter Holiday, c = Christmas and 0 = no hoiday.
+
+```{r}
+kable(as.data.frame(table(merged.rossman.train$StateHoliday)),
+      col.names = c("School Holiday", "Frequency"))
+```
+
+***
+
+SchoolHoliday is similar to StateHoliday, 0 indicating that there was no schoolHoliday while 1 indicating that there was a SchoolHoliday
+
+```{r}
+kable(as.data.frame(table(merged.rossman.train$SchoolHoliday)),
+      col.names = c("School Holiday", "Frequency"))
+```
+
+## Models
+
+The aim of modeling on the Rossmann Stores data is to predict the daily sales of stores for upto 6 weeks.
+The primary models we would use for this purpose are:  
+
+* __Regression Trees__  
+    - A tree based model involves segmenting the predictor space into simpler regions. The prediction of a new observation is nothing but the mean of the observations which belong to the same region.
+    - However, tree based models do not provide as accurate predictions as other supervised learning methods. 
+
+* __Random Forests__  
+    - Hence, we would use the the Random forest technique, which involves producing multiple trees which are later combined to form a single prediction, to improve the prediction accuracy.
+
+***
+
+* __Neural Networks__
+    - Additionally, we would explore the application of Neural Networks to the data and compare the prediction accuracy with the Regression Tree and Random Forest Models.
+
+* __Forecast__
+    - If time allows, we would also like to use the 'forecast' package in R to predict the sales using a forecast model.
+
+## Evaluation Criteria
+
+The Kaggle competition used Root Mean Square Percentage Error (RMSPE) as the evaluation metric and we will be using the same metric for evaluating the predictive performance of our model.
+The RMSPE is calculated as
+
+![](img/rmspe.png)
+
+where 
+
+$y_{i}$ denotes the sales of a single store on a single day
+$yhat_{i}$ denotes the corresponding prediction.
+
+## Timeline
+
+Phase | Date
+---|---|---
+Data cleaning and preparation | Apr 04, 2017 
+EDA | Apr 09, 2017 
+Modelling and evaluation | Apr 14, 2017 
+Comparing models | Apr 17, 2017 
+Collation of results into report and presentation | Apr 19, 2017 
+
+##Sources
+
+The following resources were refered while creating the proposal:  
+
+__1. Kaggle__ - Rossmann Store Sales dataset:
+https://www.kaggle.com/c/rossmann-store-sales  
+
+
+__2. Rossman Store Sales - Filling Gaps in the Training Set__  
+Norman Secord  
+https://www.kaggle.com/nsecord/rossmann-store-sales/filling-gaps-in-the-training-set  
+
+__3. Forecasting: Principles and Practice __  
+Rob J Hyndman and George Athanasopoulos  
+https://www.otexts.org/fpp2/  
+
+__4. An Introduction to Statistical Learning__    
+Gareth James, Daniela Witten, Trevor Hastie, Robert Tibshirani  
+
+## Questions?
