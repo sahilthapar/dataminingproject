@@ -1,9 +1,5 @@
-<<<<<<< Updated upstream
-library(readr)
-library(ggplot2)
-library(lubridate)
-library(stringr)
-=======
+library(lubridate) # Handling dates
+library(stringr) # Handling strings
 library(readr) # Reading csv files
 library(tidyr) # Data manipulation
 library(dplyr) # Data manipulation
@@ -93,3 +89,14 @@ merged.rossman.train %>%
                                  y = AvgSales,
                                  fill = StoreType),
                    stat = "identity")
+
+# Drop in number of stores during a 6 month period
+
+merged.rossman.train %>% 
+  group_by(Date) %>% 
+  summarize(n = n()) %>% 
+  ggplot() +
+    geom_line(mapping = aes(x = Date,
+                            y = n)) +
+    labs(x = "Date",
+         y = "Number of stores")
