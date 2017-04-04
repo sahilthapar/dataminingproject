@@ -110,6 +110,12 @@ __Note: Any day and store with 0 sales is ignored in scoring.__
 
 ## Timeline
 
-
+Phase | Date
+---|---|---
+Data cleaning and preparation | Apr 04, 2017 
+EDA | Apr 09, 2017 
+Modelling and evaluation | Apr 14, 2017 
+Comparing models | Apr 17, 2017 
+Collation of results into report and presentation | Apr 19, 2017 
 
 \pagebreak
