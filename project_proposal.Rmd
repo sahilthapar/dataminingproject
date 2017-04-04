@@ -1,6 +1,6 @@
 ---
 title: "Project Proposal"
-author: "Sahil Thapar"
+author: "Joshi Apoorv, Thapar Sahil, Upreti Jainendra"
 date: "4/3/2017"
 output: html_document
 ---
@@ -14,10 +14,17 @@ knitr::opts_chunk$set(cache = TRUE)
 
 \pagebreak
 
-## Background
+## The Problem And Background
 
 Rossmann is a Germany's second largest drug store chain and operates over 3,000 drug stores in 7 European countries.
 Rossmann store managers are responsible for predicting the daily sales for stores for up to six weeks in advance.
+
+With individual managers using their expertise and judgement to predict these sales the accruacy can have huge variance.
+
+Rossman challenged data scientists on [Kaggle](https://www.kaggle.com/c/rossmann-store-sales) to predict 6 weeks of daily sales for 1,115 stores located across Germany.
+
+The main motivation behind developing a model to predict the sales is to off-load and automate some of the work from store managers so as to increase the productivity, manage staff schedules. A robust prediction model enables the store managers to focus on the customers and staff members.
+
 The following factors can affect the store sales:
 
 * promotions,
@@ -26,15 +33,9 @@ The following factors can affect the store sales:
 * seasonality, and
 * locality.
 
-With individual managers using their expertise and judgement to predict these sales the accruacy can have huge variance.
+## Objective
 
-Rossman challenged data scientists on [Kaggle](https://www.kaggle.com/c/rossmann-store-sales) to predict 6 weeks of daily sales for 1,115 stores located across Germany.
-
-The main motivation behind developing a model to predict the sales is to off-load and automate some of the work from store managers so as to increase the productivity, manage staff schedules. A robust prediction model enables the store managers to focus on the customers and staff members.
-
-\pagebreak
-
-## Problem and Objective
+To build a model to Forecast sales using store, promotion, and competitor data
 
 \pagebreak
 
@@ -42,7 +43,40 @@ The main motivation behind developing a model to predict the sales is to off-loa
 
 \pagebreak
 
-## Data Dictionary
+## About the Data
+
+[Source: Kaggle](https://www.kaggle.com/c/rossmann-store-sales/data)
+
+Historical sales data for 1,115 Rossmann stores is provided.
+The task is to forecast the "Sales" column for the test set.
+
+### Files
+
+* __train.csv__ - historical data including Sales
+* __test.csv__  - historical data excluding Sales
+* __store.csv__ - supplemental information about the stores
+
+### Data dictionary
+
+* __Id__ - an Id that represents a (Store, Date) duple within the test set
+* __Store__ - a unique Id for each store
+* __Sales__ - the turnover for any given day (this is what you are predicting)
+* __Customers__ - the number of customers on a given day
+* __Open__ - an indicator for whether the store was open: 0 = closed, 1 = open
+* __StateHoliday__ - indicates a state holiday. Normally all stores, with few exceptions, are closed on state holidays. Note that all schools are closed on public holidays and weekends. a = public holiday, b = Easter holiday, c = Christmas, 0 = None
+* __SchoolHoliday__ - indicates if the (Store, Date) was affected by the closure of public schools
+* __StoreType__ - differentiates between 4 different store models: a, b, c, d
+* __Assortment__ - describes an assortment level: a = basic, b = extra, c = extended
+* __CompetitionDistance__ - distance in meters to the nearest competitor store
+* __CompetitionOpenSince [Month/Year]__ - gives the approximate year and month of the time the nearest competitor was opened
+* __Promo__ - indicates whether a store is running a promo on that day
+* __Promo2__ - Promo2 is a continuing and consecutive promotion for some stores: 0 = store is not participating, 1 = store is participating
+* __Promo2Since [Year/Week]__ - describes the year and calendar week when the store started participating in Promo2
+* __PromoInterval__ - describes the consecutive intervals Promo2 is started, naming the months the promotion is started anew. E.g. "Feb,May,Aug,Nov" means each round starts in February, May, August, November of any given year for that store
+
+\pagebreak
+
+## Data Preparation and Cleaning
 
 \pagebreak
 
@@ -60,8 +94,22 @@ The main motivation behind developing a model to predict the sales is to off-loa
 
 ## Evaluation Criteria
 
+The Kaggle competition used Root Mean Square Percentage Error (RMSPE) as the evaluation metric and we will be using the same metric for evaluating the predictive performance of our model.
+The RMSPE is calculated as
+
+![](img/rmspe.png)
+
+where 
+
+$y_{i}$ denotes the sales of a single store on a single day
+$yhat_{i}$ denotes the corresponding prediction.
+
+__Note: Any day and store with 0 sales is ignored in scoring.__
+
 \pagebreak
 
 ## Timeline
+
+
 
 \pagebreak
