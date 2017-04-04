@@ -91,6 +91,11 @@ To build a model to Forecast sales using store, promotion, and competitor data
 
 ## Approach
 
+First step is to merge the training dataset and Store Sales data set. After that we will check each variable for missing values, clean the data and will do the required imputations. Our next step will be Exploratory Data Analysis where we identify variables that are important for building a forecasting model.
+
+The crucial part of the project is that the data in hand is a time series data. The problem with the data, as observed, is that there is a 6 month gap, where only a few stores report their revenues because the other stores were temporarily closed for refurbishment, which hampers the seasonality of the data. We will deal with this by imputing sales figures during the renovation period to have a complete time series of 942 days as with other stores that did not undergo renovation. Then using Random Forest for variable selection and Forecasting Package in R, we will build a model that best fits the data and has a high predictive accuracy.
+
+
 \pagebreak
 
 ## About the Data
