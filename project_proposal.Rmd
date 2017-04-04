@@ -1,8 +1,10 @@
 ---
-title: "Project Proposal"
+title: "Predicting Store Sales - Project Proposal"
 author: "Joshi Apoorv, Thapar Sahil, Upreti Jainendra"
 date: "4/3/2017"
-output: html_document
+output:
+  html_document:
+    toc: true
 ---
 
 ```{r setup, include=FALSE}
@@ -18,6 +20,7 @@ library(tidyr) # Data manipulation
 library(dplyr) # Data manipulation
 library(ggplot2) # Plots
 library(forcats) # Factors
+library(knitr) # Clean tables
 
 ## Note setup:
 # Add your data folder into this directory and
@@ -58,8 +61,6 @@ rossman.store$PromoSinceDate <- as.Date(paste(rossman.store$Promo2SinceYear,ross
 rossman.store[,c(5,6,8,9)] <- NULL
 
 ```
-
-## Executive Summary
 
 \pagebreak
 
@@ -125,13 +126,10 @@ The task is to forecast the "Sales" column for the test set.
 
 \pagebreak
 
-
 ### Data reformatting
 
-The CompetitionOpenSinceMonth and CompetitionOpenSinceYear variables in the rossman.store dataset are combined and parsed into Y-m-d date format. The new variable is called CompetitionStart and indicates the date on which a competing store to a Rossmann store opened.
-Similarly, the Promo2SinceYear and Promo2SinceWeek variables are also combined and parsed into a valid date format to indicate the date when a store started participating in Promo2.
-
-The unused variables, CompetitionOpenSinceMonth, CompetitionOpenSinceYear, Promo2SinceYear, Promo2SinceWeek are then removed from the dataset.
+* Conversion of formats
+* Recoding levels for factor variables
 
 ```{r}
 rossman.train <-
@@ -160,6 +158,12 @@ rossman.train <-
                             "No" = "0"))
 ```
 
+### Combining Variables
+  
+* The CompetitionOpenSinceMonth and CompetitionOpenSinceYear variables in the rossman.store dataset are combined and parsed into Y-m-d date format. The new variable is called CompetitionStart and indicates the date on which a competing store to a Rossmann store opened.
+* Similarly, the Promo2SinceYear and Promo2SinceWeek variables are also combined and parsed into a valid date format to indicate the date when a store started participating in Promo2.
+* The unused variables, CompetitionOpenSinceMonth, CompetitionOpenSinceYear, Promo2SinceYear, Promo2SinceWeek are then removed from the dataset.
+
 ### Missing value and outliers
 
 > "An explicit missing value is the presence of an absence; an implicit missing value is the absence of a presence" - Hadley Wickam
@@ -187,34 +191,14 @@ These are implicit missing values in the sense that there are no NAs present in 
 
 Field | Assumption/Observation | Handling
 ---|---|---
-<<<<<<< Updated upstream
 CompetitionDistance | There is no competition | Set to mean(CompetitionDistance)
 CompetitionStart | Competition was already present | Set to min(month(date))
 PromoSinceDate | NAs are seen only when Promo = No | Set to Zero
 PromoInterval | NAs are seen only when Promo = No | Set to Zero
-=======
-CompetitionDistance | There is no competition | Set to max(CompetitionDistance)
-CompetitionOpenSinceMonth | Competition was already present | Set to min(month(date))
-Promo2SinceWeek | NAs are seen only when Promo = No | Set to Zero
-Promo2SinceYear | NAs are seen only when Promo = No | Set to Zero
-StateHoliday | NAs are seen when StateHoliday is not zero | Set to "Yes"
 
 __Implicit Missing Values__
 
 How to Fix this ?
-
-We can use some simple rules to __create__ missing values,
-
-* Create a row for every (Store, Date) for the missing six months
-* DayOfWeek - can be created using Date
-* Open - take a majority vote to decide if store is open on the date
-* Promo - take a majority vote to decide if store is running a promo on the date
-* StateHoliday - take a majority vote to decide if there is a state holiday on the date
-* SchoolHoliday - take a majority vote to decide if there is a school holiday on the date
-* Sales - take mean(Sales)
-* Customers - take mean(Customers)
-
->>>>>>> Stashed changes
 
 ```{r}
 # Merge store data into the sales data
@@ -230,21 +214,49 @@ merged.rossman.train %>%
   summarize(n = n()) %>% 
   ggplot() +
     geom_line(mapping = aes(x = Date,
-                            y = n)) +
+                            y = n),
+              color = "#3498db") +
     labs(x = "Date",
          y = "Number of stores",
          title = "Number of stores open across time")
+
 ```
 
+Let us look at the store sales for one of the stores that is missing data during this period.
+
+```{r}
+merged.rossman.train %>%
+  filter(Store == 20) %>%
+  ggplot(mapping = aes(x = Date,
+                       y = Sales)) +
+  geom_line(color = "#2ecc71") +
+  geom_smooth() + 
+  labs(title = "Store 20 Revenue across time")
+```
+
+We can use some simple rules to __create__ data for missing values,
+
+* Create a row for every (Store, Date) for the missing six months
+* DayOfWeek - can be created using Date
+* Open - take a majority vote to decide if store is open on the date
+* Promo - take a majority vote to decide if store is running a promo on the date
+* StateHoliday - take a majority vote to decide if there is a state holiday on the date
+* SchoolHoliday - take a majority vote to decide if there is a school holiday on the date
+* Sales - take mean(Sales)
+* Customers - take mean(Customers)
 
 \pagebreak
 
-## EDA
+## Exploratory Data Analysis
+
 Let's explore the variables that describe the 1115 Rossman stores.
 The store are categorized into 4 types: a, b, c and d. The number of stores of each type are as follows:
 
-```{r fig.width=10}
-table(rossman.store$StoreType)
+```{r, fig.width=10, include = T}
+kable(as.data.frame(table(rossman.store$StoreType)), col.names = c("Store Type", "Frequency"))
+```
+
+```{r, fig.width=10, include = T}
 merged.rossman.train %>%
   group_by(StoreType) %>%
   summarize(avgSalePerCustomer = round(mean(Sales/Customers, na.rm = T), 2),
@@ -270,7 +282,8 @@ a = basic, b = extra, c = extended
 Lets look at the number of stores corresponsing to each assortment level:
 
 ```{r, fig.width = 10}
-table(rossman.store$Assortment)
+kable(as.data.frame(table(rossman.store$Assortment)),
+      col.names = c("Assortment", "Frequency"))
 merged.rossman.train %>%
   group_by(Assortment) %>%
   summarize(avgSalePerCustomer = round(mean(Sales/Customers, na.rm = T), 2),
@@ -296,21 +309,64 @@ Further, lets explore the assortment levels under each store type:
 ```{r}
 table(rossman.store$StoreType, rossman.store$Assortment, dnn = c("Store Type", "Assortment level"))
 ```
+
 The distance of each store from a nearest competing store has been provided in the dataset. Lets check the distribution of this variable.
+
 ```{r}
-ggplot(rossman.store) + geom_histogram(aes(x=CompetitionDistance), binwidth = 10000)
-ggplot(rossman.store) + geom_boxplot(aes(y=CompetitionDistance, x=""))
+
+  ggplot(rossman.store) + 
+  geom_histogram(aes(x=CompetitionDistance),
+                 binwidth = 10000,
+                 fill = "#c0392b") +
+  labs(x = "Competition Distance",
+       y = "Count",
+       title = "Distribution of Competition Distance")
+
+  ggplot(rossman.store) +
+    geom_boxplot(aes(y=CompetitionDistance,
+                     x=""),
+                 fill = "#c0392b") +
+    labs(y = "Competition Distance",
+       x = "",
+       title = "Distribution of Competition Distance (Boxplot)")
 ```
 
 The plots indicates that the variable CompetitionDistance is right skewed and contains a large number of outliers.
+
+Let us try the log transformation for this variable
+
+```{r}
+  ggplot(rossman.store) + 
+  geom_histogram(aes(x=log(CompetitionDistance)),
+                 binwidth = 1,
+                 fill = "#2980b9")  +
+  labs(x = "log(Competition Distance)",
+       y = "Count",
+       title = "Distribution of Log of Competition Distance")
+
+  ggplot(rossman.store) +
+    geom_boxplot(aes(y=log(CompetitionDistance),
+                     x=""),
+                 fill = "#2980b9")  +
+    labs(y = "log(Competition Distance)",
+       x = "",
+       title = "Distribution of Log of Competition Distance (Boxplot)")
+```
+
 We can further breakdown the variable and explore it separately for each StoreType.
 
 ```{r}
-ggplot(rossman.store) + geom_boxplot(aes(y=CompetitionDistance, x=StoreType))
+  ggplot(rossman.store) +
+  geom_boxplot(aes(y = log(CompetitionDistance),
+                   x = StoreType,
+                   fill = StoreType))   +
+    labs(y = "log(Competition Distance)",
+       x = "Store Type",
+       title = "Distribution of Log of Competition Distance (Boxplot)")
 
 ```
 
-The above plot indicates that most of the outliers are noticed for store type 'a'
+Very few outliers are seen after the log transformation.
 
 Promo2 is a continuing and consecutive promotion for some stores: 0 = store is not participating, 1 = store is participating.
 Lets look at how many store are offering the promotion
@@ -320,7 +376,14 @@ rossman.store %>%
   select(Promo2) %>% 
   group_by(Promo2) %>% 
   summarize(total = n()) %>% 
-ggplot() + geom_bar(aes(x=Promo2, y=total), stat = "identity")
+  ggplot() + 
+  geom_bar(aes(x=Promo2,
+               y=total,
+               fill = Promo2),
+           stat = "identity") +
+    labs(y = "Number of stores",
+         x = "Promotion",
+         title = "Promotion running stores")
 ```
 
 Further, the variable PromoInterval describes the consecutive intervals Promo2 is started, naming the months the promotion is started anew. E.g. "Feb,May,Aug,Nov" means each round starts in February, May, August, November of any given year for that store
@@ -328,7 +391,10 @@ Further, the variable PromoInterval describes the consecutive intervals Promo2 i
 Lets look at the distribution of Promo2 participating stores based on the PromotionInterval:
 
 ```{r}
-table(rossman.store$Promo2, rossman.store$PromoInterval)
+kable(as.data.frame(table(rossman.store$Promo2, rossman.store$PromoInterval)) %>%
+  filter(Var1 == 1) %>%
+  select(c(Var2, Freq)),
+  col.names = c("Promotion Interval", "Frequency"))
 ```
 
 Variables Open, StateHoliday, and SchoolHoliday are categorical variables. The Variable open has values 1 and 0, which indicate whether the store was open (1) or closed (0).
@@ -344,7 +410,8 @@ merged.rossman.train <- merged.rossman.train %>% mutate(Open = as.factor(Open),
                                           StateHoliday = as.factor(StateHoliday),
                                           SchoolHoliday = as.factor(SchoolHoliday))
 
-table(merged.rossman.train$Open)
+kable(as.data.frame(table(merged.rossman.train$Open)),
+      col.names = c("Store Open", "Frequency"))
 ```
 
 Further, we can also check the status for each store type.
@@ -357,14 +424,16 @@ table(merged.rossman.train$StoreType, merged.rossman.train$Open, dnn = c("Store 
 For Variable StateHoliday, a = Public Holiday, b = Easter Holiday, c = Christmas and 0 = no hoiday.
 
 ```{r}
-table(merged.rossman.train$StateHoliday)
+kable(as.data.frame(table(merged.rossman.train$StateHoliday)),
+      col.names = c("School Holiday", "Frequency"))
 ```
 
 
 SchoolHoliday is similar to StateHoliday, 0 indicating that there was no schoolHoliday while 1 indicating that there was a SchoolHoliday
 
 ```{r}
-table(merged.rossman.train$SchoolHoliday)
+kable(as.data.frame(table(merged.rossman.train$SchoolHoliday)),
+      col.names = c("School Holiday", "Frequency"))
 ```
 
 \pagebreak
