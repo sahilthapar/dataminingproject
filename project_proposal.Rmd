@@ -177,12 +177,8 @@ merged.rossman.train %>%
 
 
 \pagebreak
-<<<<<<< HEAD
-## EDA  
-=======
 
 ## EDA
->>>>>>> origin/master
 Let's explore the variables that describe the 1115 Rossman stores.
 The store are categorized into 4 types: a, b, c and d. The number of stores of each type are as follows:
 
