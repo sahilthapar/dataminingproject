@@ -105,6 +105,9 @@ table(merged.rossman.train$Open)
 table(merged.rossman.train$StateHoliday)
 table(merged.rossman.train$SchoolHoliday)
 
+table(merged.rossman.train$StoreType, merged.rossman.train$Open, dnn = c("Store Type",
+      "Store Status"))
+
 # Complete
 
 # Drop in number of stores during a 6 month period
@@ -117,3 +120,4 @@ merged.rossman.train %>%
                             y = n)) +
     labs(x = "Date",
          y = "Number of stores")
+
