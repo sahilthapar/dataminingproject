@@ -187,17 +187,11 @@ These are implicit missing values in the sense that there are no NAs present in 
 
 Field | Assumption/Observation | Handling
 ---|---|---
-<<<<<<< Updated upstream
 CompetitionDistance | There is no competition | Set to mean(CompetitionDistance)
 CompetitionStart | Competition was already present | Set to min(month(date))
 PromoSinceDate | NAs are seen only when Promo = No | Set to Zero
 PromoInterval | NAs are seen only when Promo = No | Set to Zero
-=======
-CompetitionDistance | There is no competition | Set to max(CompetitionDistance)
-CompetitionOpenSinceMonth | Competition was already present | Set to min(month(date))
-Promo2SinceWeek | NAs are seen only when Promo = No | Set to Zero
-Promo2SinceYear | NAs are seen only when Promo = No | Set to Zero
-StateHoliday | NAs are seen when StateHoliday is not zero | Set to "Yes"
+
 
 __Implicit Missing Values__
 
@@ -213,8 +207,6 @@ We can use some simple rules to __create__ missing values,
 * SchoolHoliday - take a majority vote to decide if there is a school holiday on the date
 * Sales - take mean(Sales)
 * Customers - take mean(Customers)
-
->>>>>>> Stashed changes
 
 ```{r}
 # Merge store data into the sales data
@@ -370,6 +362,15 @@ table(merged.rossman.train$SchoolHoliday)
 \pagebreak
 
 ## Models
+
+The aim of modeling on the Rossmann Stores data is to predict the daily sales of stores for upto 6 weeks.
+The primary models we would use for this purpose are __Regression Trees__ and __Random Forests__.  
+A tree based model involves segmenting the predictor space into simpler regions. The prediction of a new observation is nothing but the mean of the observations which belong to the same region.  
+However, tree based models do not provide as accurate predictions as other supervised learning methods. Hence, we would use the the Random forest technique, which involves producing multiple trees which are later combined to form a single prediction, to improve the prediction accuracy.
+
+Additionally, we would explore the application of __Neural Networks__ to the data and compare the prediction accuracy to the Regression Tree and Random Forest Models.
+
+If time allows, we would also like to use the 'forecast' package in R to predict the sales using a forecast model.
 
 \pagebreak
 
