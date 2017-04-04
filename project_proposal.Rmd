@@ -196,10 +196,10 @@ These are implicit missing values in the sense that there are no NAs present in 
 
 Field | Assumption/Observation | Handling
 ---|---|---
-CompetitionDistance | There is no competition | Set to mean(CompetitionDistance)
-CompetitionStart | Competition was already present | Set to min(month(date))
-PromoSinceDate | NAs are seen only when Promo = No | Set to Zero
-PromoInterval | NAs are seen only when Promo = No | Set to Zero
+CompetitionDistance | No competition | Set to mean
+CompetitionStart | Already present | Set to min date
+PromoSinceDate | NAs only when Promo = No | Set to Zero
+PromoInterval | NAs only when Promo = No | Set to Zero
 
 __Implicit Missing Values__
 
