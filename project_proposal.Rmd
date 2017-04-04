@@ -3,7 +3,7 @@ title: "Predicting Store Sales - Project Proposal"
 author: "Joshi Apoorv, Thapar Sahil, Upreti Jainendra"
 date: "4/3/2017"
 output:
-  html_document:
+  pdf_document:
     toc: true
 ---
 
@@ -497,17 +497,19 @@ Collation of results into report and presentation | Apr 19, 2017
 
 ##Sources
 
-The following resources were refered while creating the proposal:
+The following resources were refered while creating the proposal:  
+
 __1. Kaggle__ - Rossmann Store Sales dataset:
-https://www.kaggle.com/c/rossmann-store-sales
+https://www.kaggle.com/c/rossmann-store-sales  
 
-__2. Rossman Store Sales - Filling Gaps in the Training Set__
-Norman Secord
-https://www.kaggle.com/nsecord/rossmann-store-sales/filling-gaps-in-the-training-set
 
-__3. Forecasting: Principles and Practice __
-Rob J Hyndman and George Athanasopoulos
-https://www.otexts.org/fpp2/
+__2. Rossman Store Sales - Filling Gaps in the Training Set__  
+Norman Secord  
+https://www.kaggle.com/nsecord/rossmann-store-sales/filling-gaps-in-the-training-set  
 
-__4. An Introduction to Statistical Learning__  
-Gareth James, Daniela Witten, Trevor Hastie, Robert Tibshirani
+__3. Forecasting: Principles and Practice __  
+Rob J Hyndman and George Athanasopoulos  
+https://www.otexts.org/fpp2/  
+
+__4. An Introduction to Statistical Learning__    
+Gareth James, Daniela Witten, Trevor Hastie, Robert Tibshirani  
