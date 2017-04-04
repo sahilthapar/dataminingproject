@@ -98,8 +98,6 @@ The task is to forecast the "Sales" column for the test set.
 
 \pagebreak
 
-## Data Preparation and Cleaning
-
 
 ### Data reformatting
 
@@ -145,6 +143,17 @@ The number of stores that have recorded sales data falls significantly during a 
 > Note that some stores in the dataset were temporarily closed for refurbishment.
 
 These are implicit missing values in the sense that there are no NAs present in the data set. Instead the expected rows are missing all together.
+
+## Data Imputation
+
+Field | Assumption/Observation | Handling
+---|---|---
+CompetitionDistance | There is no competition | Set to max(CompetitionDistance)
+CompetitionOpenSinceMonth | Competition was already present | Set to min(month(date))
+Promo2SinceWeek | NAs are seen only when Promo = No | Set to Zero
+Promo2SinceYear | NAs are seen only when Promo = No | Set to Zero
+StateHoliday | NAs are seen when StateHoliday is not zero | Set to "Yes"
+
 
 ```{r}
 # Merge store data into the sales data
