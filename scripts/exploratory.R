@@ -5,21 +5,10 @@ library(tidyr) # Data manipulation
 library(dplyr) # Data manipulation
 library(ggplot2) # Plots
 library(forcats) # Factors
-
-library(lubridate) # Handling dates
-library(stringr) # Handling strings
-library(readr) # Reading csv files
-library(tidyr) # Data manipulation
-library(dplyr) # Data manipulation
-library(ggplot2) # Plots
-library(forcats) # Factors
 library(knitr) # Clean tables
 
 ## Note setup:
 # Add your data folder into this directory and
-
-# Read files
-
 rossman.train <- read_csv(file = './data/train.csv',
                           col_types = 'icDiicccc')
 rossman.test <- read_csv(file = './data/test.csv',
