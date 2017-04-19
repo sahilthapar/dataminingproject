@@ -10,13 +10,12 @@ library(stats)
 library(ggfortify)
 library(scales)
 library(forecast)
-library(PerformanceAnalytics)
 
 ## Note setup:
 # Add your data folder into this directory and
 read.prep.data <- function() {
   rossman.train <- read_csv(file = './data/train.csv',
-                            col_types = 'icDiicccc')
+                            col_types = 'icDiiiici')
   rossman.test <- read_csv(file = './data/test.csv',
                            col_types = 'iicDcccc')
   rossman.store <- read_csv(file = './data/store.csv',
@@ -41,20 +40,11 @@ read.prep.data <- function() {
                                   "Friday" = "5" ,
                                   "Saturday" = "6" ,
                                   "Sunday" = "7" ),
-           Open = fct_recode(Open,
-                             "Yes" = "1",
-                             "No" = "0"),
-           Promo = fct_recode(Promo,
-                              "Yes" = "1",
-                              "No" = "0"),
            StateHoliday = fct_recode(StateHoliday,
                                      "None" = "0",
                                      "Public" = "a",
                                      "Easter" = "b",
-                                     "Christmas" = "c"),
-           SchoolHoliday = fct_recode(SchoolHoliday,
-                                      "Yes" = "1",
-                                      "No" = "0"))
+                                     "Christmas" = "c"))
   return(list(rossman.train, rossman.test, rossman.store))
 }
 
@@ -68,25 +58,7 @@ store.1 <-
   rossman.train %>% 
   filter(Store == 1) 
 
-forecast_fit <- function(d) {
-  print(names(d))
-  Sales <- ts(d$Sales, frequency = 7)
-  lambda <- BoxCox.lambda(Sales)
-  tsclean(Sales, replace.missing = TRUE, lambda = lambda)
-  # External regressors to be used in the model
-  xreg <- 
-    d %>%
-    mutate(Open = as.numeric(Open),
-           Promo = as.numeric(Open)) %>%
-    select(c(Open, Promo))
-  # print(rowSums(xreg))
-  fit <- forecast(Sales, lambda = lambda)
-  return(fit)
-}
-
-f <- forecast_fit(store.1)
-View(round(f$mean, 2))
-summary(store.1)
+# Exploration
 
 store.1 %>%
   select(Date, Sales, DayOfWeek) %>%
@@ -120,6 +92,27 @@ store.1 %>%
            fill = "#3498db",
            stat = "identity") +
   ggtitle(label = "Store 20: Daily Sales in January, 2013")
+
+# Fitting the forecast model
+
+forecast_fit <- function(d) {
+  Sales <- ts(d$Sales, frequency = 10)
+  lambda <- BoxCox.lambda(Sales)
+  tsclean(Sales, replace.missing = TRUE, lambda = lambda)
+  # External regressors to be used in the ARIMA model
+  # xreg <- 
+  #   d %>%
+  #   mutate(Open = as.numeric(Open),
+  #          Promo = as.numeric(Open)) %>%
+  #   select(c(Open, Promo))
+  fit <- forecast(Sales, lambda = lambda)
+  return(fit)
+}
+
+f <- forecast_fit(store.1)
+View(round(f$mean, 2))
+summary(store.1)
+
 
 
 
