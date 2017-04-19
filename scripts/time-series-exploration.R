@@ -10,6 +10,7 @@ library(stats)
 library(ggfortify)
 library(scales)
 library(forecast)
+library(tibble)
 
 ## Note setup:
 # Add your data folder into this directory and
@@ -95,27 +96,51 @@ store.1 %>%
 
 # Fitting the forecast model
 
-forecast_fit <- function(d) {
-  Sales <- ts(d$Sales, frequency = 10)
+forecast_fit <- function(d, take.log = T, func = ets) {
+  d <-
+    d %>%
+    mutate(Sales = ifelse(Sales > 0,
+                          log(Sales),
+                          0))
+    
+  Sales <- ts(d$Sales[1:(nrow(d) - 42)], frequency = 7)
   lambda <- BoxCox.lambda(Sales)
   tsclean(Sales, replace.missing = TRUE, lambda = lambda)
   # External regressors to be used in the ARIMA model
-  # xreg <- 
+  # xreg <-
   #   d %>%
+  #   head((nrow(d) - 42)) %>%
   #   mutate(Open = as.numeric(Open),
   #          Promo = as.numeric(Open)) %>%
   #   select(c(Open, Promo))
-  fit <- forecast(Sales, lambda = lambda)
+  fit <- func(Sales, lambda = lambda)
   return(fit)
 }
 
-f <- forecast_fit(store.1)
-View(round(f$mean, 2))
-summary(store.1)
+fit_arima <- forecast_fit(store.1, auto.arima)
+fit_ets <- forecast_fit(store.1)
 
+forecast_arima <- forecast(object = fit_arima, h = 42)
+forecast_ets <- forecast(object = fit_ets, h = 42)
 
+# Function to quick check predictions
+get_mse <- function(predicted, actual){
+  diff <- predicted - actual
+  a <- cbind(predicted = predicted,
+             actual = actual,
+             diff = diff)
+  a <- as_tibble(a)
+  View(a)
+  return(mean(diff^2))
+}
 
+pred.arima <- round(forecast_arima$mean, 2)
+pred.ets <- round(forecast_ets$mean, 2)
+actual <- tail(store.1$Sales, 42)
+actual <- ifelse(actual > 0, log(actual), 0)
 
+get_mse(pred.arima, actual)
+get_mse(pred.ets, actual)
 
 ## Seasonality = 7
 
