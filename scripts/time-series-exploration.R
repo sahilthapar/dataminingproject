@@ -15,6 +15,8 @@
   library(scales)
   library(forecast)
   library(tibble)
+  library(purrr)
+  library(cluster)
 }
 
 ## Read and prepare data
@@ -52,6 +54,7 @@ read.prep.data <- function() {
                                      "Christmas" = "c"))
   return(list(rossman.train, rossman.test, rossman.store))
 }
+
 
 {
   rossman.data <- read.prep.data()
@@ -104,15 +107,50 @@ read.prep.data <- function() {
     ggtitle(label = "Store 20: Daily Sales in January, 2013")
 }
 
-## Generic function for fitting model
-forecast_fit <- function(d, take.log = T, func = ets) {
-  d <-
-    d %>%
-    mutate(Sales = ifelse(Sales > 0,
-                          log(Sales),
-                          0))
+
+## Cluster data
+bins = 20
+{
+  store.clusters <- 
+    rossman.train %>%
+    group_by(Store) %>%
+    summarize(Sales = mean(Sales),
+              Customers = mean(Customers)) %>%
+    left_join(rossman.store, by = "Store") %>%
+    select(Sales, Customers, Store) %>% 
+    mutate(bin = ntile(Sales, bins))
   
-  Sales <- ts(d$Sales[1:(nrow(d) - 42)], frequency = 7)
+  store.clusters %>%
+    group_by(bin) %>%
+    summarize(ymax = max(Sales),
+              ymin = min(Sales)) %>%
+    ggplot() +
+    geom_errorbar(mapping = aes(x = 30,
+                                ymax = ymax,
+                                ymin = ymin,
+                                color = as.factor(bin)),
+                  size = 3) +
+    
+    geom_jitter(data = store.clusters,
+                mapping = aes(x = 300,
+                              y = Sales,
+                              color = as.factor(bin)),
+                width = 250) +
+    coord_flip()
+}
+
+# Prepare data for forecast method
+{
+  forecast_data <-
+    rossman.train %>%
+    left_join(store.clusters, by = "Store") %>%
+    group_by(Date, bin) %>%
+    summarize(Sales = mean(Sales.x))
+}
+
+## Generic function for fitting model
+forecast_fit <- function(d, func = ets) {
+  Sales <- ts(d$Sales, frequency = 7)
   lambda <- BoxCox.lambda(Sales)
   tsclean(Sales, replace.missing = TRUE, lambda = lambda)
   # External regressors to be used in the ARIMA model
@@ -126,30 +164,35 @@ forecast_fit <- function(d, take.log = T, func = ets) {
   return(fit)
 }
 
-## Arima and ets models
-{  
-  fit_arima <- forecast_fit(store.1, auto.arima)
-  fit_ets <- forecast_fit(store.1)
-  
-  forecast_arima <- forecast(object = fit_arima, h = 42)
-  forecast_ets <- forecast(object = fit_ets, h = 42)
-  
-  # Function to quick check predictions
-  get_mse <- function(predicted, actual){
-    diff <- predicted - actual
-    a <- cbind(predicted = predicted,
-               actual = actual,
-               diff = diff)
-    a <- as_tibble(a)
-    View(a)
-    return(mean(diff^2))
-  }
-  
-  pred.arima <- round(forecast_arima$mean, 2)
-  pred.ets <- round(forecast_ets$mean, 2)
-  actual <- tail(store.1$Sales, 42)
-  actual <- ifelse(actual > 0, log(actual), 0)
-  
-  get_mse(pred.arima, actual)
-  get_mse(pred.ets, actual)
+forecast.store <- function(bin.id) {
+    store <-
+      forecast_data %>% 
+      filter(bin == bin.id)
+    fit_ets <- forecast_fit(store)
+    
+    forecast_ets <- forecast(object = fit_ets, h = 48, robust = T)
+    pred.ets <- forecast_ets$mean
+    return(pred.ets)
 }
+
+# Submissions
+{
+  a <- c(1:bins) %>%
+  map(forecast.store) %>%
+  unlist
+    
+  predictions <- as_tibble(cbind(predicted = a,
+                                 Date = c(rep(c(1:48), bins)),
+                                 bin = sort(c(rep(c(1:bins), 48)))))
+  predictions <- predictions %>%
+    mutate(predicted = ifelse(predicted < 300, 0, predicted))
+  
+  r <- rossman.test %>%
+    left_join(store.clusters, by = "Store") %>%
+    select(Store, Date, bin, Id) %>%
+    mutate(Date = as.numeric(Date - min(Date) + 1)) %>%
+    left_join(predictions, by = c("Date" = "Date", "bin" = "bin")) %>%
+    select(Id, Sales = predicted) %>%
+    write_csv(path = paste0("./data/submission-", bins, ".csv"))
+}
+  
