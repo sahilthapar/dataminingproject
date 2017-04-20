@@ -464,8 +464,25 @@ R - ETS | 22% | 25%
 SAS - ETS Testing | 24% | 26%
 Kaggle Winner |  | 11%
 
-## XGBoost
+***
 
+## XGBoost
+Designed to improve the performance of boosted trees. 
+High predictive power but slow with implementation.
+All variables must be in numeric format.
+
+Performed 3-fold CV using 30 trees.
+
+***
+
+##Train RMPSE
+![](img/RPlot.jpeg)
+***
+
+##Test RMPSE
+![](img/RPlot01.jpeg)
+
+***
 
 ## Final Results
 
@@ -505,6 +522,11 @@ Rob J Hyndman and George Athanasopoulos
 https://www.otexts.org/fpp2/  
 
 __4. An Introduction to Statistical Learning__    
-Gareth James, Daniela Witten, Trevor Hastie, Robert Tibshirani  
+Gareth James, Daniela Witten, Trevor Hastie, Robert Tibshirani
+
+__5. XGBoost Rossmann Parameter Tuning__
+https://www.kaggle.com/khozzy/rossmann-store-sales/xgboost-parameter-tuning-template/run/90168
+
+***
 
 ## Questions?
