@@ -189,10 +189,35 @@ forecast.store <- function(bin.id) {
   
   r <- rossman.test %>%
     left_join(store.clusters, by = "Store") %>%
-    select(Store, Date, bin, Id) %>%
+    select(Store, Date, bin, Id, Sales) %>%
     mutate(Date = as.numeric(Date - min(Date) + 1)) %>%
     left_join(predictions, by = c("Date" = "Date", "bin" = "bin")) %>%
-    select(Id, Sales = predicted) %>%
+    select(Id, Date, Store, Sales, predicted)
+    
+  
+  r %>%
+    select(Id, Sales) %>%
     write_csv(path = paste0("./data/submission-", bins, ".csv"))
 }
   
+
+{
+  merged <- 
+    rossman.test %>%
+    left_join(store.clusters, by = "Store") %>%
+    select(Store, Date, bin, Id, Sales) %>%
+    mutate(DateNum = as.numeric(Date - min(Date) + 1)) %>%
+    left_join(predictions, by = c("DateNum" = "Date", "bin" = "bin")) %>%
+    select(Id, Date, Store, Sales, predicted)
+  
+    rossman.train %>%
+      bind_rows(merged) %>%
+      filter(Store == 1100) %>%
+      select(Date, Sales, predicted) %>%
+      mutate(Flag = is.na(predicted),
+             Sales = ifelse(is.na(predicted), Sales, predicted)) %>%
+      ggplot() +
+      geom_line(mapping = aes(x = Date,
+                            y = Sales,
+                            color = Flag))
+}
