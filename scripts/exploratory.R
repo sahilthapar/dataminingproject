@@ -211,26 +211,6 @@ table(rossman.store$StoreType)
 table(rossman.store$Promo2)
 table(rossman.store$PromoInterval)
 
-#Create a new variable CompetitionStart in date format combining
-#CompetitionOpensSinceMonth and CompetitionOpensSinceYear
-
-day <- 15
-rossman.store$CompetitionStart <- str_c(rossman.store$CompetitionOpenSinceYear,"-",rossman.store$CompetitionOpenSinceMonth,"-",day)
-rossman.store$CompetitionStart <- parse_date_time(rossman.store$CompetitionStart, "Y-m-d", tz = "America/New_York")
-
-#Create a new variable PromoSinceDate in date format combining
-#Promo2SinceYear and Promo2SinceWeek
-rossman.store$PromoSinceDate <- as.Date(paste(rossman.store$Promo2SinceYear,rossman.store$Promo2SinceWeek, 1, sep="-"), "%Y-%U-%u")
-
-#Remove unusable variables holding values of month and year
-rossman.store[,c(5,6,8,9)] <- NULL
-
-# Merge store data into the sales data
-
-merged.rossman.train <-
-  rossman.train %>%
-  left_join(rossman.store, by = 'Store')
-
 # Summary of the merged data
 
 summary(merged.rossman.train)
