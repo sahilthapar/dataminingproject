@@ -197,18 +197,20 @@ forecast.store <- function(bin.id) {
 }
   
 ###################Log_linear model data prep########################################
-bins1 = 20
+## Cluster data
+bins = 20
 {
-  store.clusters2 <- 
+  store.clusters <- 
     rossman.train %>%
     group_by(Store) %>%
-    #summarize(Sales = mean(Sales),
-     #         Customers = mean(Customers)) %>%
+    mutate(Sales = ifelse(Sales > 0, log(Sales), 0)) %>% 
+    summarize(Sales = mean(Sales),
+              Customers = mean(Customers)) %>%
     left_join(rossman.store, by = "Store") %>%
-    select(-Promo2SinceWeek, -Promo2, -Promo2SinceYear, -PromoInterval) %>% 
-    mutate(bin = ntile(Sales, bins1))
+    select(Sales, Customers, Store) %>% 
+    mutate(bin = ntile(Sales, bins))
   
-  store.clusters2 %>%
+  store.clusters %>%
     group_by(bin) %>%
     summarize(ymax = max(Sales),
               ymin = min(Sales)) %>%
@@ -219,7 +221,7 @@ bins1 = 20
                                 color = as.factor(bin)),
                   size = 3) +
     
-    geom_jitter(data = store.clusters2,
+    geom_jitter(data = store.clusters,
                 mapping = aes(x = 300,
                               y = Sales,
                               color = as.factor(bin)),
@@ -227,60 +229,64 @@ bins1 = 20
     coord_flip()
 }
 
-View(store.clusters2)
-
-library(plyr)
-nonzero <- function(x) sum(x == 0)
-numcolwise(nonzero)(store.cluster3)
-
-store.cluster3 <- subset(store.clusters2, Sales != 0)
-
-
-
-str(store.clusters2)
-store.clusters2$StoreType = as.factor(store.clusters2$StoreType)
-
-store.cluster3$log_sales = log(store.cluster3$Sales)
-View(store.cluster3)
-
-store.clusters2$bin = as.factor(store.clusters2$bin)
-
-store.cluster3 <- store.cluster3[,-4]
-
-#NA with means
-
-meanCompetitionDistance <- mean(store.cluster3$CompetitionDistance, na.rm = TRUE)
-store.cluster3[is.na(store.cluster3$CompetitionDistance), c("CompetitionDistance")] <- meanCompetitionDistance
-
-
-model.train <- lm(log_sales ~ Date + Store + Assortment + 
-                    StoreType + CompetitionDistance, data = store.cluster3, 
-                  na.action = na.omit)
-summary(model.train)
-plot(model.train)
-
-preds <- predict(model.train)
-
-sqrt(mean(((exp(preds) - exp(store.cluster3$log_sales))/exp(store.cluster3$log_sales))^2))
-
-#Preparing testing data
-
+# Prepare data for forecast method
 {
-  store.clusters4 <- 
-    rossman.test %>%
-    group_by(Store) %>%
-    #summarize(Sales = mean(Sales),
-    #         Customers = mean(Customers)) %>%
-    left_join(rossman.store, by = "Store") %>%
-    select(-Promo2SinceWeek, -Promo2, -Promo2SinceYear, -PromoInterval)
-    #mutate(bin = ntile(Store, bins3))
+  forecast_data <-
+    rossman.train %>%
+    mutate(Sales = ifelse(Sales > 0, log(Sales), 0)) %>%
+    left_join(store.clusters, by = "Store") %>%
+    group_by(Date, bin) %>%
+    summarize(Sales = mean(Sales.x))
 }
-    
-View(store.clusters4)
 
-meanCompetitionDistance <- mean(store.clusters4$CompetitionDistance, na.rm = TRUE)
-store.clusters4[is.na(store.clusters4$CompetitionDistance), c("CompetitionDistance")] <- meanCompetitionDistance
+## Generic function for fitting model
+forecast_fit <- function(d, func = ets) {
+  Sales <- ts(d$Sales, frequency = 7)
+  lambda <- BoxCox.lambda(Sales)
+  tsclean(Sales, replace.missing = TRUE, lambda = lambda)
+  # External regressors to be used in the ARIMA model
+  # xreg <-
+  #   d %>%
+  #   head((nrow(d) - 42)) %>%
+  #   mutate(Open = as.numeric(Open),
+  #          Promo = as.numeric(Open)) %>%
+  #   select(c(Open, Promo))
+  fit <- func(Sales, lambda = lambda)
+  return(fit)
+}
 
-model.test <- predict(model.train, store.clusters4, type = "response")
+forecast.store <- function(bin.id) {
+  store <-
+    forecast_data %>% 
+    filter(bin == bin.id)
+  fit_ets <- forecast_fit(store)
+  
+  forecast_ets <- forecast(object = fit_ets, h = 48, robust = T)
+  pred.ets <- forecast_ets$mean
+  return(pred.ets)
+}
 
-####################Log Linear end##################################################
+# Submissions
+{
+  a <- c(1:bins) %>%
+    map(forecast.store) %>%
+    unlist
+  
+  predictions <- as_tibble(cbind(predicted = a,
+                                 Date = c(rep(c(1:48), bins)),
+                                 bin = sort(c(rep(c(1:bins), 48)))))
+  predictions <- predictions %>%
+    mutate(predicted = ifelse(predicted < 5.7, 0, exp(predicted)))
+  
+  r <- rossman.test %>%
+    left_join(store.clusters, by = "Store") %>%
+    select(Store, Date, bin, Id) %>%
+    mutate(Date = as.numeric(Date - min(Date) + 1)) %>%
+    left_join(predictions, by = c("Date" = "Date", "bin" = "bin")) %>%
+    select(Id, Sales = predicted) %>%
+    write_csv(path = paste0("./data/submission-log", bins, ".csv"))
+}
+
+rossman.train %>%
+  select(Date, Store, Sales) %>%
+  write_csv("./data/sas-em-data.csv")

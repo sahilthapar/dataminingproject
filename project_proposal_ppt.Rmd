@@ -116,7 +116,7 @@ To build a model to Forecast sales using store, promotion, and competitor data.
 ***
 
 * Modelling
-    - Log Linear Model
+    - Log Forecast Model
     - Forecast package - Exponential smoothing state space model
     - XGBoost
 * Evaluating and Comparing the models
@@ -318,9 +318,8 @@ bins = 20
 The aim of modeling on the Rossmann Stores data is to predict the daily sales of stores for upto 6 weeks.
 The primary models we would use for this purpose are:  
 
-* __Log Linear Model__  
+* __Log Forecast Model__  
      
-
 * __Forecast package - (ETS)__ 
 
 * __XGBoost__
@@ -338,7 +337,39 @@ where
 $y_{i}$ denotes the sales of a single store on a single day
 $yhat_{i}$ denotes the corresponding prediction.
 
-## Log Linear Model
+## Log Forecast Model
+
+```{r}
+logSales <- 
+  read_csv(file = './data/submission-log20.csv') %>%
+  left_join(rossman.test, by = "Id") %>%
+  mutate(Flag = 0) %>%
+  select(Date, Sales, Store, Flag)
+
+m <- 
+  rossman.train %>%
+  mutate(Flag = 1) %>%
+  bind_rows(logSales)
+
+m %>%
+      filter(Store == 1100) %>%
+      select(Date, Sales, Flag) %>%
+      ggplot() +
+      geom_line(mapping = aes(x = Date,
+                            y = ifelse(Sales > 0, log(Sales), 0),
+                            color = as.factor(Flag))) +
+    labs(x = "Date",
+         y = "Log Sales",
+         title = "Log Forecast Model") +
+    theme(legend.position = "none")
+```
+
+***
+
+Model | Training Error | Test Error
+--|--|--
+R - Log Forecast | 27% | 29%
+Kaggle Winner | | 11%
 
 ## Forecast package (Exponential smoothing state space model)
 
@@ -421,16 +452,31 @@ forecast.store <- function(bin.id) {
 }
 ```
 
+## SAS - ETS
+
+![](img/SAS - ETS.png)
+
 ***
 
-Sample | Error
---|--
-Training | 22%
-Testing | 25%
-Kaggle Winner | 11%
-
+Model | Training Error | Test Error
+--|--|--
+R - ETS | 22% | 25%
+SAS - ETS Testing | 24% | 26%
+Kaggle Winner |  | 11%
 
 ## XGBoost
+
+
+## Final Results
+
+Model | Training Error | Test Error
+--|--|--
+R - Log Forecast | 27% | 29%
+R - ETS | 22% | 25%
+SAS - ETS Testing | 24% | 26%
+XGBoost | 20% | 21%
+Kaggle Winner | | 11%
+
 
 ## Timeline
 
