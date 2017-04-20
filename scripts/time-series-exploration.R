@@ -196,3 +196,92 @@ forecast.store <- function(bin.id) {
     write_csv(path = paste0("./data/submission-", bins, ".csv"))
 }
   
+###################Log_linear model data prep########################################
+bins1 = 20
+{
+  store.clusters2 <- 
+    rossman.train %>%
+    group_by(Store) %>%
+    #summarize(Sales = mean(Sales),
+     #         Customers = mean(Customers)) %>%
+    left_join(rossman.store, by = "Store") %>%
+    select(-Promo2SinceWeek, -Promo2, -Promo2SinceYear, -PromoInterval) %>% 
+    mutate(bin = ntile(Sales, bins1))
+  
+  store.clusters2 %>%
+    group_by(bin) %>%
+    summarize(ymax = max(Sales),
+              ymin = min(Sales)) %>%
+    ggplot() +
+    geom_errorbar(mapping = aes(x = 30,
+                                ymax = ymax,
+                                ymin = ymin,
+                                color = as.factor(bin)),
+                  size = 3) +
+    
+    geom_jitter(data = store.clusters2,
+                mapping = aes(x = 300,
+                              y = Sales,
+                              color = as.factor(bin)),
+                width = 250) +
+    coord_flip()
+}
+
+View(store.clusters2)
+
+library(plyr)
+nonzero <- function(x) sum(x == 0)
+numcolwise(nonzero)(store.cluster3)
+
+store.cluster3 <- subset(store.clusters2, Sales != 0)
+
+
+
+str(store.clusters2)
+store.clusters2$StoreType = as.factor(store.clusters2$StoreType)
+
+store.cluster3$log_sales = log(store.cluster3$Sales)
+View(store.cluster3)
+
+store.clusters2$bin = as.factor(store.clusters2$bin)
+
+store.cluster3 <- store.cluster3[,-4]
+
+#NA with means
+
+meanCompetitionDistance <- mean(store.cluster3$CompetitionDistance, na.rm = TRUE)
+store.cluster3[is.na(store.cluster3$CompetitionDistance), c("CompetitionDistance")] <- meanCompetitionDistance
+
+
+model.train <- lm(log_sales ~ Date + Store + Assortment + 
+                    StoreType + CompetitionDistance, data = store.cluster3, 
+                  na.action = na.omit)
+summary(model.train)
+plot(model.train)
+
+preds <- predict(model.train)
+
+sqrt(mean(((exp(preds) - exp(store.cluster3$log_sales))/exp(store.cluster3$log_sales))^2))
+
+#Preparing testing data
+
+bins3 = 20
+{
+  store.clusters4 <- 
+    rossman.test %>%
+    group_by(Store) %>%
+    #summarize(Sales = mean(Sales),
+    #         Customers = mean(Customers)) %>%
+    left_join(rossman.store, by = "Store") %>%
+    select(-Promo2SinceWeek, -Promo2, -Promo2SinceYear, -PromoInterval)
+    #mutate(bin = ntile(Store, bins3))
+}
+    
+View(store.clusters4)
+
+meanCompetitionDistance <- mean(store.clusters4$CompetitionDistance, na.rm = TRUE)
+store.clusters4[is.na(store.clusters4$CompetitionDistance), c("CompetitionDistance")] <- meanCompetitionDistance
+
+model.test <- predict(model.train, store.clusters4, type = "response")
+
+####################Log Linear end##################################################
