@@ -265,7 +265,6 @@ sqrt(mean(((exp(preds) - exp(store.cluster3$log_sales))/exp(store.cluster3$log_s
 
 #Preparing testing data
 
-bins3 = 20
 {
   store.clusters4 <- 
     rossman.test %>%
