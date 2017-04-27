@@ -10,3 +10,4 @@ project_proposal_cache/
 project_proposal_files/
 project_proposal_ppt_cache/
 project_proposal_ppt_files/
+*.docx
