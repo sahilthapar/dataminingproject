@@ -1,9 +1,10 @@
 ---
-title: "Predicting Store Sales - Project Proposal"
+title: "Predicting Store Sales - Project Report"
 author: "Joshi Apoorv, Thapar Sahil, Upreti Jainendra"
 date: "4/3/2017"
 output:
-  beamer_presentation
+  word_document:
+    toc: true
 ---
 
 ```{r setup, include=FALSE}
@@ -89,125 +90,6 @@ rossman.store[,c(5,6,8,9)] <- NULL
 
 ```
 
-## The Problem And Background
-
-Rossmann is a Germany's second largest drug store chain and operates over 3,000 drug stores in 7 European countries.
-
-Rossman challenged data scientists on [Kaggle](https://www.kaggle.com/c/rossmann-store-sales) to predict 6 weeks of daily sales for 1,115 stores located across Germany.
-
-The following factors can affect the store sales:
-
-* promotions,
-* competition,
-* school and state holidays,
-* seasonality, and
-* locality.
-
-## Objective
-
-To build a model to Forecast sales using store, promotion, and competitor data.
-
-## Approach
-
-* Data preparation
-    - Merge data set
-* Exploratory Data Analysis
-
-***
-
-* Modelling
-    - Log Forecast Model
-    - Forecast package - Exponential smoothing state space model
-    - XGBoost
-* Evaluating and Comparing the models
-
-## About the Data
-
-[Source: Kaggle](https://www.kaggle.com/c/rossmann-store-sales/data)
-
-Historical sales data for 1,115 Rossmann stores is provided.
-The task is to forecast the "Sales" column for the test set.
-
-### Files
-
-* __train.csv__ - historical data including Sales
-* __test.csv__  - historical data excluding Sales
-* __store.csv__ - supplemental information about the stores
-
-***
-
-### Data dictionary
-
-__Train__
-
-* __Id__ - an Id that represents a (Store, Date) duple within the test set
-* __Store__ - a unique Id for each store
-* __Sales__ - the turnover for any given day (this is what you are predicting)
-* __Customers__ - the number of customers on a given day
-* __Open__ - an indicator for whether the store was open: 0 = closed, 1 = open
-
-***
-
-* __StateHoliday__ - indicates a state holiday. Normally all stores, with few exceptions, are closed on state holidays. Note that all schools are closed on public holidays and weekends. a = public holiday, b = Easter holiday, c = Christmas, 0 = None
-* __SchoolHoliday__ - indicates if the (Store, Date) was affected by the closure of public schools
-
-***
-
-__Store Data__
-
-* __StoreType__ - differentiates between 4 different store models: a, b, c, d
-* __Assortment__ - describes an assortment level: a = basic, b = extra, c = extended
-* __CompetitionDistance__ - distance in meters to the nearest competitor store
-* __CompetitionOpenSince [Month/Year]__ - gives the approximate year and month of the time the nearest competitor was opened
-
-***
-
-* __Promo__ - indicates whether a store is running a promo on that day
-* __Promo2__ - Promo2 is a continuing and consecutive promotion for some stores: 0 = store is not participating, 1 = store is participating
-* __Promo2Since [Year/Week]__ - describes the year and calendar week when the store started participating in Promo2
-* __PromoInterval__ - describes the consecutive intervals Promo2 is started, naming the months the promotion is started anew. E.g. "Feb,May,Aug,Nov" means each round starts in February, May, August, November of any given year for that store
-
-***
-
-### Data reformatting
-
-* Conversion of formats
-* Recoding levels for factor variables
-
-***
-
-### Combining Variables
-  
-* Merged CompetitionOpenSinceMonth and CompetitionOpenSinceYear variables.
-* Similarly, merged the Promo2SinceYear and Promo2SinceWeek variables
-
-### Missing value and outliers
-
-> "An explicit missing value is the presence of an absence; an implicit missing value is the absence of a presence" - Hadley Wickam
-
-***
-
-Two types of missing values:
-
-__Explicit missing value__
-
-Field | Missing Count
----|---
-CompetitionDistance | `r sum(is.na(rossman.store$CompetitionDistance))`
-CompetitionStart | `r sum(is.na(rossman.store$CompetitionStart))`
-PromoSinceDate | `r sum(is.na(rossman.store$PromoSinceDate))`
-PromoInterval | `r sum(is.na(rossman.store$PromoInterval))`
-
-***
-
-__Implicit missing value__
-
-The number of stores that have recorded sales data falls significantly during a 6 month period. This information was provided in the data description as:
-
-> Note that some stores in the dataset were temporarily closed for refurbishment.
-
-These are implicit missing values in the sense that there are no NAs present in the data set. Instead the expected rows are missing all together.
-
 ```{r, fig.height = 3, fig.width = 4}
 # Merge store data into the sales data
 
@@ -216,63 +98,11 @@ merged.rossman.train <-
   left_join(rossman.store, by = 'Store')
 ```
 
-***
+\pagebreak
 
-## Exploratory Data Analysis
+## Grouping the stores into bins
 
-    
-```{r}
-## Get data for a store, store 1
-{
-  store.1 <-
-  rossman.train %>% 
-  filter(Store == 1) 
-}
-
-## Exploration
-  store.1 %>%
-    select(Date, Sales, DayOfWeek) %>%
-    ggplot() +
-    geom_line(mapping = aes(x = Date,
-                            y = Sales),
-              color = "#3498db") +
-    geom_hline(mapping = aes(yintercept = mean(Sales)),
-               color = '#e74c3c',
-               show.legend = T) + 
-    ggtitle(label = "Store 1: Daily Sales")
-```
-
-***
-
-```{r}
-  store.1 %>%
-    select(Date, Sales, DayOfWeek) %>%
-    filter(Date < "2013-02-01") %>%
-    ggplot() +
-    geom_line(mapping = aes(x = Date,
-                            y = Sales),
-              color = "#3498db") +
-    geom_hline(mapping = aes(yintercept = mean(Sales)),
-               color = '#e74c3c',
-               show.legend = T) + 
-    ggtitle(label = "Store 1: Daily Sales in January, 2013")
-```
-
-***
-
-```{r}
-  store.1 %>%
-    group_by(DayOfWeek) %>%
-    summarize(Avg_Sales = mean(Sales)) %>%
-    ggplot() +
-    geom_bar(mapping = aes(x = DayOfWeek,
-                           y = Avg_Sales),
-             fill = "#3498db",
-             stat = "identity") +
-    ggtitle(label = "Store 1: Daily Sales in January, 2013")
-```
-
-***
+Instead of building 1105 different models, one for each store. We grouped the stores into 20 different groups. The grouping was based on the average daily store sales. We can see clearly, that the bins are closer together for smaller sales and the bin size is wider as we ove along the x-axis increasing the sales.
 
 ```{r}
 ## Cluster data
@@ -312,66 +142,16 @@ bins = 20
 }
 ```
 
-
-## Models
-
-The aim of modeling on the Rossmann Stores data is to predict the daily sales of stores for upto 6 weeks.
-The primary models we would use for this purpose are:  
-
-* __Log Forecast Model__  
-     
-* __Forecast package - (ETS)__ 
-
-* __XGBoost__
-    
-    
-## Evaluation Criteria
-
-The Kaggle competition used Root Mean Square Percentage Error (RMSPE) as the evaluation metric and we will be using the same metric for evaluating the predictive performance of our model.
-The RMSPE is calculated as
-
-![](img/rmspe.png)
-
-where 
-
-$y_{i}$ denotes the sales of a single store on a single day
-$yhat_{i}$ denotes the corresponding prediction.
-
-## Log Forecast Model
-
-```{r}
-logSales <- 
-  read_csv(file = './data/submission-log20.csv') %>%
-  left_join(rossman.test, by = "Id") %>%
-  mutate(Flag = 0) %>%
-  select(Date, Sales, Store, Flag)
-
-m <- 
-  rossman.train %>%
-  mutate(Flag = 1) %>%
-  bind_rows(logSales)
-
-m %>%
-      filter(Store == 1100) %>%
-      select(Date, Sales, Flag) %>%
-      ggplot() +
-      geom_line(mapping = aes(x = Date,
-                            y = ifelse(Sales > 0, log(Sales), 0),
-                            color = as.factor(Flag))) +
-    labs(x = "Date",
-         y = "Log Sales",
-         title = "Log Forecast Model") +
-    theme(legend.position = "none")
-```
-
-***
-
-Model | Training Error | Test Error
---|--|--
-R - Log Forecast | 27% | 29%
-Kaggle Winner | | 11%
+\pagebreak
 
 ## Forecast package (Exponential smoothing state space model)
+
+Exponential smoothing was a method proposed in 1950s by Brown (1959), Holt (1957), and Winters (1960). It has been the motivation for some of the most successful forecasting methods.
+The forecasts produced using the ETS methods are weighted averages of past observations, with the weights decreasing exponentially as the observations get older. 
+This means that the recent observations are associated with higher weights and the older observations are associated with smaller weights. 
+The ETS method is used to generate reliable forecastly quickly and for a wide range of time series.
+
+Each model consists of a measurement equation that describes the observed data, and some transition equations that describe how the unobserved components or states (level, trend, seasonal) change over time. Hence, these are referred to as “state space models”.
 
 
 ```{r}
@@ -452,11 +232,13 @@ forecast.store <- function(bin.id) {
 }
 ```
 
+\pagebreak
+
 ## SAS - ETS
 
-![](img/SAS - ETS.png)
+Exponential smoothing state space model is also available in SAS and we use can use it with the same parameters as in R to build this model.
 
-***
+![](img/SAS - ETS.png)
 
 Model | Training Error | Test Error
 --|--|--
@@ -464,46 +246,16 @@ R - ETS | 22% | 25%
 SAS - ETS Testing | 24% | 26%
 Kaggle Winner |  | 11%
 
-***
-
-## XGBoost
-Designed to improve the performance of boosted trees. 
-High predictive power but slow with implementation.
-All variables must be in numeric format.
-
-Performed 3-fold CV using 30 trees.
-
-***
-
-##Train RMPSE
-![](img/RPlot.jpeg)
-***
-
-##Test RMPSE
-![](img/RPlot01.jpeg)
-
-***
+\pagebreak
 
 ## Final Results
 
 Model | Training Error | Test Error
 --|--|--
-R - Log Forecast | 27% | 29%
 R - ETS | 22% | 25%
 SAS - ETS Testing | 24% | 26%
 XGBoost | 20% | 21%
 Kaggle Winner | | 11%
-
-
-## Timeline
-
-Phase | Date
----|---|---
-Data cleaning and preparation | Apr 04, 2017 
-EDA | Apr 09, 2017 
-Modelling and evaluation | Apr 14, 2017 
-Comparing models | Apr 17, 2017 
-Collation of results into report and presentation | Apr 19, 2017 
 
 ##Sources
 

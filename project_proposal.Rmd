@@ -1,5 +1,5 @@
 ---
-title: "Predicting Store Sales - Project Proposal"
+title: "Predicting Store Sales - Project Presentation"
 author: "Joshi Apoorv, Thapar Sahil, Upreti Jainendra"
 date: "4/3/2017"
 output:
